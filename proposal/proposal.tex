@@ -1,0 +1,120 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Packages --- for one page appearance use option Z
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}  % Standard academic margins
+\usepackage{mathptmx}              % times new roman font
+\usepackage{hyperref}              % Clickable links
+\usepackage{titlesec}              % Formatting headings
+\usepackage{setspace}              % Line spacing
+\usepackage{enumitem}
+
+% --- Bibliography Setup (BibLaTeX / APA Style) ---
+\usepackage[backend=biber, style=apa]{biblatex}
+\addbibresource{references.bib}
+
+% --- Formatting ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    citecolor=black,
+}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\setstretch{1.15} 
+\begin{document}
+
+% --- Title Block ---
+\begin{center}
+    \vspace*{1em} 
+    {\large \bfseries Bachelor Thesis Proposal\par}
+    \vspace{1em}
+    {\Large \bfseries Macroeconomic Shifts and Intrinsic Value Deviations in Pharmaceutical Equities\par}
+    
+    \vspace{1em}
+    
+    {\large Samuel Bommer \\
+    \href{mailto:samuel.bommer@student.unisg.ch}{samuel.bommer@student.unisg.ch}\par}
+    
+    \vspace{1em} 
+    
+    {\large May 2026\par}
+    
+    \vspace{2em}
+\end{center}
+
+\vspace{1em}
+
+\section{Research Question}
+To what extent do macroeconomic shifts co-move with the deviation between market prices and intrinsic values in pharmaceutical equities, and does this relationship exhibit a measurable lead-lag structure?
+
+\section{Description and Relevance}
+This thesis investigates the relationship between macroeconomic shifts and valuation errors in the pharmaceutical sector, where a valuation error is defined as the deviation between a company's intrinsic value and the value implied by the market. The central aim is to identify what macroeconomic shifts co-move with a separation of the two measures, and to investigate the lead-lag structure of the relationship.
+
+The study constructs quarterly synthetic DCF valuations for around 80-120 US (and possibly European) pharmaceutical equities over a period of 20 years (2005-2025) using the LSEG Workspace API. The deviation between market capitalisation and intrinsic value (the valuation error) serves as the central dependent variable. A broader set of macroeconomic variables are tested, where the final three to five indicators are determined based on their co-movement with valuation errors and their ability to represent a broad picture of the wider economic environment (e.g. credit spreads, volatility index, yield curve slope, interest rates, real yields). The latter is done using a Principal Component Analysis.
+
+A panel regression model is implemented to test whether these macro dimensions co-move with the valuation error, specifically testing for a lead-lag relationship. Depending on the properties of the data (including stationarity, and the stability of the relationship over time) additional or alternative models may be used. A Granger causality test could further investigate the significance and temporal structure of this relationship, and rolling window regressions to assess whether the relationship varies across macroeconomic regimes. (The final model selection will be driven by the data.)
+
+This approach is specifically relevant for the pharmaceutical sector given its unique business model which combines short-term commercial revenues with long-term probabilistic research and development pipelines. This makes it an interesting case study to examine how capital markets price fundamental value under shifting macroeconomic conditions. Understanding whether this deviation co-moves with macroeconomic conditions has practical relevance for anyone managing pharmaceutical equities. If valuation errors co-move with macroeconomic conditions, a better understanding of this relationship may help contextualise observed deviations between market prices and intrinsic value.
+
+
+\section{Relevant Literature}
+An initial overview of the relevant literature:
+
+\begin{itemize}
+    \item \textit{Lee, C. M., Myers, J., \& Swaminathan, B. (1999). What is the Intrinsic Value of the Dow? The Journal of Finance, 54(5), 1693-1741.} This study establishes the foundational methodology for using analyst consensus forecasts to compute the intrinsic values and evaluating the result against macroeconomic indicators.
+    \item \textit{Dong, M., Hirshleifer, D., Richardson, S., \& Teoh, S. H. (2006). Does Investor Misvaluation Drive the Takeover Market? The Journal of Finance, 61(2), 725-762.} This paper provides an example for using panel regressions on the firm level with fixed effects to track valuation deviations across a large number of equities, while accounting for specific corporate characteristics.
+    \item \textit{Heinrichs, N., Hess, D., Homburg, C., Lorenz, M., \& Sievers, S. (2013). Extended Dividend, Cash Flow, and Residual Income Valuation Models: Accounting for Deviations from Ideal Conditions. Contemporary Accounting Research, 30(1), 42-79.} This text provides further details on how to structure the valuation, specifically how to handle accounting anomalies, and ensuring data integrity.
+    \item \textit{Koller, T., Goedhart, M., \& Wessels, D. (2020). Valuation: Measuring and Managing the Value of Companies (7th ed.). John Wiley \& Sons.} This textbook serves as the baseline for the valuation.
+    \item \textit{Damodaran, A. (2012). Investment Valuation: Tools and Techniques for Determining the Value of Any Asset (3rd ed.). John Wiley \& Sons.} Serves as the methodological foundation for intrinsic value estimation and DCF construction, complementing Koller et al.
+    \item \textit{Asteriou, D., \& Hall, S. G. (2021). Applied Econometrics (4th ed.). Bloomsbury Publishing.} This textbook serves as the baseline for the statistical modelling.
+\end{itemize}
+
+\section{Collecting Samples}
+
+The data will be extracted using LSEG Workspace API. The idea is to have around 80-120 US (and possibly European) pharmaceutical equities over 20 years with the quarterly numbers and I/B/E/S consensus estimates. This should in the end yield around 6400-9600 observations, including a wide horizon of macroeconomic shifts. The firms will be drawn from established sector indices (such as S\&P 500 Pharmaceuticals Industry Index) ensuring variation across firms. To avoid survivorship bias, delisted and acquired firms will be retained in the panel up to the point of their exit.
+
+The macroeconomic variables required for the analysis are publicly available through standard financial data repositories. One source will be the Federal Reserve Economic Data (FRED). If more granular data is needed, the Bloomberg terminal will be used.
+\pagebreak
+\section{Outline}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+    \item \textbf{Abstract and Introduction} \hfill \textit{pp. 1--4}
+    \item \textbf{Literature Review} \hfill \textit{pp. 5--11}
+    \begin{enumerate}[label=\arabic{enumi}.\arabic*]
+        \item Equity Valuation and the Role of Macroeconomic Conditions
+        \item The Pharmaceutical Business Model
+        \item Systematic Valuation Approaches and Consensus-Based Intrinsic Value Estimation
+    \end{enumerate}
+    \item \textbf{Data and Methodology} \hfill \textit{pp. 12--21}
+    \begin{enumerate}[label=\arabic{enumi}.\arabic*]
+        \item Sample Selection and Data Sources
+        \item Construction of the Synthetic DCF and Valuation Error
+        \item Macroeconomic Variable Selection
+        \item Statistical Models (Regression, Granger, etc.)
+        \item Rubostness Checks and Model Validation
+    \end{enumerate}
+    \item \textbf{Results and Discussion} \hfill \textit{pp. 22--30}
+    \begin{enumerate}[label=\arabic{enumi}.\arabic*]
+        \item Descriptive Analysis of Valuation Errors
+        \item Macroeconomic Co-movement with Valuation Errors
+        \item Co-movement and the Lead-Lag Structure
+    \end{enumerate} 
+    \item \textbf{Conclusion, Limitations, Future Research} \hfill \textit{pp. 31--34}
+\end{enumerate}
+
+
+\section{Initial Timeline}
+The initial timeline structured across the Spring semester of 2027:
+
+\begin{itemize}
+    \item February 2027 -- Data infrastructure: Activation of the LSEG Workspace API connection, pipeline and code in Python, extraction of the 20-year firm panel and macro indices, database assembly potentially using DuckDB (depending on the size), and handling of delisted firms. Version control via GitHub. Start with the writing of the literature review and theoretical framework.
+    \item March 2027 -- Modelling: Code the script for the valuation and the subsequent valuation errors. Choose the macroeconomic indicators and run the PCA. Start with the statistical modelling and properly formulate the insights in \LaTeX.
+    \item April 2027 -- Writing: Drafting the thesis in \LaTeX, covering the methodology, the results, and the discussion. (Modelling should be mostly complete at this stage)
+    \item May 2027 -- Refinement and Details: Running checks, final edit of the text, and submission.
+\end{itemize}
+
+
+
+\end{document}

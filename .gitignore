@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[oc]
+dist/
+wheels/
+*.egg-info
+.venv
+
+# Data
+*.duckdb
+*.csv
+.env
+*.json
+
+# LaTeX build artifacts
+build/
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.pdf
+
+# Quarto
+*_files/
+*.html
