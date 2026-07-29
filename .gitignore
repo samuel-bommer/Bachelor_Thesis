@@ -15,6 +15,7 @@ wheels/
 *.csv
 .env
 *.json
+src/lseg-data.config.json
 
 # LaTeX build artifacts
 *.aux
