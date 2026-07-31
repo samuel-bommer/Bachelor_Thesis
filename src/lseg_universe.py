@@ -12,7 +12,6 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent / "data" / "thesis.duckdb"
 
 
-
 def get_lseg_universe() -> pd.DataFrame:
     """
     Function returns a DataFrame with the Data
@@ -36,11 +35,16 @@ def get_lseg_universe() -> pd.DataFrame:
                 'TR.CommonName', 'TR.IsDelistedQuote']
     )
 
+    ld.close_session()
+    
     df_universe = pd.concat([df_universe_active, df_universe_inactive], ignore_index=True)
     return df_universe
 
 def save_universe(df: pd.DataFrame) -> None:
-    con = duckdb.connect(str(DB_PATH))
-    con.execute("CREATE OR REPLACE TABLE universe AS SELECT * FROM df")
-    con.close()
+    with duckdb.connect(str(DB_PATH)) as con:
+        con.register('universe_df', df)
+        con.execute("CREATE OR REPLACE TABLE universe AS SELECT * FROM universe_df")
     
+
+df = get_lseg_universe()
+save_universe(df)
