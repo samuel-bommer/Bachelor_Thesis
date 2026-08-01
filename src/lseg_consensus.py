@@ -26,7 +26,8 @@ def get_rics() -> list:
     
 def pull_and_save(table_name: str, fields: list, parameters: dict) -> None:
     """
-    Download the numbers
+    Function to download the concensus numbers from LSEG. In chunks and with
+    a timer in order not to go over the API limit.
     """
     
     rics = get_rics()

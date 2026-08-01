@@ -18,7 +18,6 @@ def get_lseg_universe() -> pd.DataFrame:
     needed for the Analysis
     """
     
-    ld.open_session()
     df_universe_active = ld.get_data(
         universe=['SCREEN(U(IN(Equity(active, public, primary))),'
                   'IN(TR.TRBCIndustryCode,"56201040"),'
@@ -34,8 +33,6 @@ def get_lseg_universe() -> pd.DataFrame:
         fields=['TR.RIC', 'TR.OrganizationID',
                 'TR.CommonName', 'TR.IsDelistedQuote']
     )
-
-    ld.close_session()
     
     df_universe = pd.concat([df_universe_active, df_universe_inactive], ignore_index=True)
     return df_universe
@@ -44,7 +41,9 @@ def save_universe(df: pd.DataFrame) -> None:
     with duckdb.connect(str(DB_PATH)) as con:
         con.register('universe_df', df)
         con.execute("CREATE OR REPLACE TABLE universe AS SELECT * FROM universe_df")
+        print(f'Retrieve done.')
     
-
+ld.open_session()
 df = get_lseg_universe()
+ld.close_session()
 save_universe(df)
