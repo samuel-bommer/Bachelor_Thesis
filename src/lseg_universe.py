@@ -38,12 +38,43 @@ def get_lseg_universe() -> pd.DataFrame:
     return df_universe
 
 def save_universe(df: pd.DataFrame) -> None:
+    """
+    Save the current universe to the DB
+    """
+    
     with duckdb.connect(str(DB_PATH)) as con:
         con.register('universe_df', df)
         con.execute("CREATE OR REPLACE TABLE universe AS SELECT * FROM universe_df")
         print(f'Retrieve done.')
+        
+def IpoDate_retrieve() -> None:
+    """
+    IPO date has to be retrieved seperately and thn
+    append it to the current table
+    """
     
-ld.open_session()
-df = get_lseg_universe()
-ld.close_session()
-save_universe(df)
+    with duckdb.connect(str(DB_PATH)) as con:
+        rics = con.execute("SELECT Instrument FROM universe").df()["Instrument"].tolist()
+    
+    df_ipo = ld.get_data(
+        universe=rics,
+        fields=['TR.IPODate']
+    )
+    
+    with duckdb.connect(str(DB_PATH)) as con:
+        con.register('ipo_df', df_ipo)
+        con.execute("ALTER TABLE universe ADD COLUMN IF NOT EXISTS IPODate DATE")
+        con.execute("""
+            UPDATE universe
+            SET IPODate = ipo_df."IPO Date"
+            FROM ipo_df
+            WHERE universe.Instrument = ipo_df.Instrument
+        """)
+
+
+if __name__ == "__main__":
+    ld.open_session()
+    df = get_lseg_universe()
+    save_universe(df)
+    IpoDate_retrieve()
+    ld.close_session()

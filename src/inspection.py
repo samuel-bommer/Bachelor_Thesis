@@ -1,0 +1,16 @@
+"""
+This file is stricly for inspecting the data that
+we retrieved.
+"""
+
+import duckdb
+
+
+con = duckdb.connect('../data/thesis.duckdb')
+df_universe = con.execute("SELECT * FROM universe LIMIT 100").df()
+df_consensus = con.execute("SELECT * FROM consensus_raw LIMIT 1000").df()
+df_fundamentals = con.execute("SELECT * FROM fundamentals_raw LIMIT 1000").df()
+df_marketcap = con.execute("SELECT * FROM market_cap_raw LIMIT 1000").df()
+df_price = con.execute("SELECT * FROM returns_raw LIMIT 1000").df()
+
+con.close()

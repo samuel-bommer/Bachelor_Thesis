@@ -17,6 +17,10 @@ FIELDS = [
 
 PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'FQ'}
 
-ld.open_session()
-lseg_consensus.pull_and_save('fundamentlas_raw', FIELDS, PARAMETERS)
-ld.close_session()
+
+if __name__ == "__main__":
+    ld.open_session()
+    lseg_consensus.pull_and_save('fundamentals_raw', FIELDS, PARAMETERS)
+    ld.close_session()
+
+

@@ -56,6 +56,8 @@ FIELDS = [
 
 PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'CQ'}
 
-ld.open_session()
-pull_and_save('consensus_raw', FIELDS, PARAMETERS)
-ld.close_session()
+
+if __name__ == "__main__":
+    ld.open_session()
+    pull_and_save('consensus_raw', FIELDS, PARAMETERS)
+    ld.close_session()
