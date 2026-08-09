@@ -48,16 +48,22 @@ def pull_and_save(table_name: str, fields: list, parameters: dict) -> None:
             
 
 FIELDS = [
-    'TR.EPSMean(Period=FY1)', 'TR.EPSMean(Period=FY2)', 'TR.EPSMean(Period=FY3)',
-    'TR.RevenueMean(Period=FY1)', 'TR.RevenueMean(Period=FY2)',
-    'TR.EBITMean(Period=FY1)', 'TR.EBITMean(Period=FY2)',
-    'TR.LTGMean', 'TR.NumberOfAnalysts(Period=FY1)',
+    'TR.EPSMean(Period=FY1).date',
+    'TR.EPSMean(Period=FY1)',
+    'TR.EPSMean(Period=FY2)', 
+    'TR.EPSMean(Period=FY3)',
+    'TR.RevenueMean(Period=FY1)',
+    'TR.RevenueMean(Period=FY2)',
+    'TR.EBITMean(Period=FY1)',
+    'TR.EBITMean(Period=FY2)',
+    'TR.LTGMean',
+    'TR.NumberOfAnalysts(Period=FY1)'
 ]
 
-PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'CQ'}
+PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'CQ', 'Curn': 'USD'}
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     ld.open_session()
     pull_and_save('consensus_raw', FIELDS, PARAMETERS)
     ld.close_session()

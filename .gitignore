@@ -12,6 +12,7 @@ wheels/
 
 # Data
 *.duckdb
+*.duckdb.wal
 *.csv
 .env
 *.json

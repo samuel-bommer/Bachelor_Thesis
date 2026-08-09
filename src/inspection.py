@@ -12,5 +12,6 @@ df_consensus = con.execute("SELECT * FROM consensus_raw LIMIT 1000").df()
 df_fundamentals = con.execute("SELECT * FROM fundamentals_raw LIMIT 1000").df()
 df_marketcap = con.execute("SELECT * FROM market_cap_raw LIMIT 1000").df()
 df_price = con.execute("SELECT * FROM returns_raw LIMIT 1000").df()
-
+df_panel_clean = con.execute("SELECT * FROM panel_clean LIMIT 5000").df()
+con.execute("SHOW TABLES").df()
 con.close()

@@ -7,17 +7,19 @@ import lseg_consensus
 
 
 FIELDS_MARKETCAP = [
+    'TR.CompanyMarketCap.date',
     'TR.CompanyMarketCap',
     'TR.PriceClose',
     'TR.SharesOutstanding',
 ]
 
 FIELDS_RETURNS = [
-    'TR.TotalReturn',
+    'TR.TotalReturn.date',
+    'TR.TotalReturn'
 ]
 
-PARAMS_MARKETCAP = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'CQ'}
-PARAMS_RETURNS   = {'SDate': '2000-01-01', 'EDate': '2025-12-31', 'Frq': 'CM'}
+PARAMS_MARKETCAP = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'CQ', 'Curn': 'USD'}
+PARAMS_RETURNS   = {'SDate': '2000-01-01', 'EDate': '2025-12-31', 'Frq': 'CM', 'Curn': 'USD'}
 
 
 if __name__ == "__main__":
