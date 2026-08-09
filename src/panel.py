@@ -22,10 +22,10 @@ def build_data() -> pd.DataFrame:
         con.execute("""
             CREATE OR REPLACE TABLE panel_clean AS
 
-            quarter_ends AS (
+            WITH quarter_ends AS (
                 SELECT (s + INTERVAL '1 MONTH' - INTERVAL '1 DAY')::DATE AS quarter_date
                 FROM generate_series(DATE '2005-03-01', DATE '2025-12-01', INTERVAL '3 MONTHS') t(s)
-            )
+            ),
 
             spine AS (
                 SELECT u.Instrument, q.quarter_date
@@ -86,7 +86,26 @@ def build_data() -> pd.DataFrame:
 
             fundamentals_filtered AS (
                 SELECT * FROM fundamentals_pit WHERE rn = 1
-            )
+            ),
+            
+            market_pit AS (
+                SELECT
+                    s.Instrument,
+                    s.quarter_date,
+                    m."Company Market Cap"  AS market_cap,
+                    m."Price Close"         AS price_close,
+                    m."Outstanding Shares"  AS shares_outstanding,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY s.Instrument, s.quarter_date
+                        ORDER BY m."Date" DESC
+                    ) AS rn
+                FROM spine s
+                JOIN market_cap_raw m
+                    ON s.Instrument = m.Instrument
+                    AND m."Date" <= s.quarter_date
+            ),
+            
+            market_filtered AS (SELECT * FROM market_pit WHERE rn = 1)
 
             SELECT
                 s.Instrument,
@@ -104,9 +123,9 @@ def build_data() -> pd.DataFrame:
                 cf.n_analysts,
 
                 -- market
-                m."Company Market Cap"   AS market_cap,
-                m."Price Close"          AS price_close,
-                m."Outstanding Shares"   AS shares_outstanding,
+                mf.market_cap   AS market_cap,
+                mf.price_close          AS price_close,
+                mf.shares_outstanding   AS shares_outstanding,
 
                 -- fundamentals (point-in-time)
                 ff.revenue_hist,
@@ -123,8 +142,8 @@ def build_data() -> pd.DataFrame:
             FROM spine s
             LEFT JOIN consensus_filtered cf
                 ON s.Instrument = cf.Instrument AND s.quarter_date = cf.quarter_date
-            LEFT JOIN market_cap_raw m
-                ON s.Instrument = m.Instrument AND s.quarter_date = m."Date"
+            LEFT JOIN market_filtered mf
+                ON s.Instrument = mf.Instrument AND s.quarter_date = mf.quarter_date
             LEFT JOIN fundamentals_filtered ff
                 ON s.Instrument = ff.Instrument AND s.quarter_date = ff.quarter_date
         """)
