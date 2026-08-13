@@ -1,5 +1,9 @@
 """
-Fundamentals
+Fundamentals.
+
+Get the fundamentals from LSEG. Whilst most are actively 
+used in the DCF, others are essentially a sanity check (e.g. TR.WACC)
+for the  DCF calculation.
 """
 
 import lseg_consensus
@@ -16,11 +20,14 @@ FIELDS = [
     'TR.TotalDebtOutstanding', 
     'TR.CashAndSTInvestments',
     'TR.InterestExpense',
-    'TR.IncomeTaxRate',
     'TR.TotalEquity', 
     'TR.ResearchAndDevelopment',
-    'TR.DividendsPaid',
     'TR.OriginalAnnouncementDate',
+    'TR.WACCTaxRate',
+    'TR.TaxRateMean',
+    'TR.F.DivPaidCashTotCF',
+    'TR.WACCERP',
+    'TR.WACC'
 ]
 
 PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'FQ', 'Curn' : 'USD'}

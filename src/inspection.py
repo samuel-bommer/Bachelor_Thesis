@@ -1,6 +1,6 @@
 """
 This file is stricly for inspecting the data that
-we retrieved.
+we retrieved. (Essentially a helper file)
 """
 
 import duckdb

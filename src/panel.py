@@ -74,6 +74,7 @@ def build_data() -> pd.DataFrame:
                     f."Interest Expense"                 AS interest_expense,
                     f."Total Equity"                     AS book_equity,
                     f."Research And Development"         AS rd_expense,
+                    
                     ROW_NUMBER() OVER (
                         PARTITION BY s.Instrument, s.quarter_date
                         ORDER BY f."Date" DESC
