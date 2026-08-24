@@ -37,14 +37,17 @@ def pull_and_save(table_name: str, fields: list, parameters: dict, chunk_size: i
         con.execute(f'DROP TABLE IF EXISTS {table_name}')
         
         for i, chunk in enumerate(chunks):
-            df = ld.get_data(universe=chunk, fields=fields, parameters=parameters)
-            df = df.replace('', None)
-            con.register('chunk_df', df)
-            if i == 0:
-                con.execute(f'CREATE TABLE {table_name} AS SELECT * FROM chunk_df')
-            else:
-                con.execute(f'INSERT INTO {table_name} SELECT * FROM chunk_df')
-            print(f'Chunk {i+1}/{len(chunks)} done')
+            try:
+                df = ld.get_data(universe=chunk, fields=fields, parameters=parameters)
+                df = df.replace('', None)
+                con.register('chunk_df', df)
+                if i == 0:
+                    con.execute(f'CREATE TABLE {table_name} AS SELECT * FROM chunk_df')
+                else:
+                    con.execute(f'INSERT INTO {table_name} SELECT * FROM chunk_df')
+                print(f'Chunk {i+1}/{len(chunks)} done')
+            except Exception as e:
+                print(f'Chunk {i+1}/{len(chunks)} skipped: {e}')
             time.sleep(SLEEP)
             
 

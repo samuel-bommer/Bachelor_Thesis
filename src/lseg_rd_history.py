@@ -14,13 +14,13 @@ import lseg.data as ld
 import lseg_consensus
 
 FIELDS = [
+    'TR.ResearchAndDevelopment.date',
     'TR.ResearchAndDevelopment',
-    'TR.F.RnD'
 ]
 
 PARAMETERS = {'SDate': '1995-01-01', 'EDate': '2004-12-31', 'Frq': 'FQ', 'Curn': 'USD'}
 
 if __name__ == '__main__':
     ld.open_session()
-    lseg_consensus.pull_and_save('rd_history_raw', FIELDS, PARAMETERS, chunk_size=8)
+    lseg_consensus.pull_and_save('rd_history_raw', FIELDS, PARAMETERS, chunk_size=3)
     ld.close_session()

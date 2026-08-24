@@ -44,6 +44,8 @@ def build_data() -> pd.DataFrame:
                     c."Revenue - Mean_1"             AS rev_mean_fy2,
                     c."EBIT - Mean"                  AS ebit_mean_fy1,
                     c."EBIT - Mean_1"                AS ebit_mean_fy2,
+                    c."EBITDA - Mean"                AS ebitda_mean_fy1,
+                    c."EBITDA - Mean_1"              AS ebitda_mean_fy2,
                     c."Long Term Growth - Mean"      AS ltg_mean,
                     c."Number of Analysts"           AS n_analysts,
                     ROW_NUMBER() OVER (
@@ -78,6 +80,8 @@ def build_data() -> pd.DataFrame:
                     f."Interest Expense"                           AS interest_expense,
                     f."Total Equity"                               AS book_equity,
                     f."Research And Development"                   AS rd_expense,
+                    f."Research & Development Expense"             AS rd_cfs,
+                    f."Income Taxes"                               AS income_tax,
                     f."WACC Tax Rate, (%)"                         AS wacc_tax_rate,
                     f."Tax Rate - Mean"                            AS tax_rate_mean,
                     f."Dividends Paid - Cash - Total - Cash Flow"  AS dividends_paid,
@@ -90,7 +94,7 @@ def build_data() -> pd.DataFrame:
                 FROM spine s
                 JOIN fundamentals_raw f
                     ON s.Instrument = f.Instrument
-                    AND f."Date" <= s.quarter_date
+                    AND f."Date" <= s.quarter_date - INTERVAL '90 days'
             ),
 
             fundamentals_filtered AS (
@@ -128,6 +132,8 @@ def build_data() -> pd.DataFrame:
                 cf.rev_mean_fy2,
                 cf.ebit_mean_fy1,
                 cf.ebit_mean_fy2,
+                cf.ebitda_mean_fy1,
+                cf.ebitda_mean_fy2,
                 cf.ltg_mean,
                 cf.n_analysts,
 
@@ -151,6 +157,8 @@ def build_data() -> pd.DataFrame:
                 ff.interest_expense,
                 ff.book_equity,
                 ff.rd_expense,
+                ff.rd_cfs,
+                ff.income_tax,
                 ff.wacc_tax_rate,
                 ff.tax_rate_mean,
                 ff.dividends_paid,
