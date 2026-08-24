@@ -24,20 +24,21 @@ def get_rics() -> list:
         return con.execute('SELECT Instrument FROM universe').df()['Instrument'].tolist()
     
     
-def pull_and_save(table_name: str, fields: list, parameters: dict) -> None:
+def pull_and_save(table_name: str, fields: list, parameters: dict, chunk_size: int = CHUNK_SIZE) -> None:
     """
     Function to download the concensus numbers from LSEG. In chunks and with
     a timer in order not to go over the API limit.
     """
-    
+
     rics = get_rics()
-    chunks = [rics[i:i+CHUNK_SIZE] for i in range(0, len(rics), CHUNK_SIZE)]
+    chunks = [rics[i:i+chunk_size] for i in range(0, len(rics), chunk_size)]
 
     with duckdb.connect(str(DB_PATH)) as con:
         con.execute(f'DROP TABLE IF EXISTS {table_name}')
         
         for i, chunk in enumerate(chunks):
             df = ld.get_data(universe=chunk, fields=fields, parameters=parameters)
+            df = df.replace('', None)
             con.register('chunk_df', df)
             if i == 0:
                 con.execute(f'CREATE TABLE {table_name} AS SELECT * FROM chunk_df')
@@ -56,6 +57,8 @@ FIELDS = [
     'TR.RevenueMean(Period=FY2)',
     'TR.EBITMean(Period=FY1)',
     'TR.EBITMean(Period=FY2)',
+    'TR.EBITDAMean(Period=FY1)',
+    'TR.EBITDAMean(Period=FY2)',
     'TR.LTGMean',
     'TR.NumberOfAnalysts(Period=FY1)'
 ]

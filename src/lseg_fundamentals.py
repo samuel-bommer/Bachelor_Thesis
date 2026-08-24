@@ -13,20 +13,24 @@ FIELDS = [
     'TR.Revenue.date',
     'TR.Revenue',
     'TR.EBIT',
+    'TR.NetIncome',
     'TR.DepreciationAmort',
+    'TR.DepreciationAmortizationActValue',
+    'TR.F.DeprDeplAmortTot',
     'TR.CapitalExpenditures',
-    'TR.TotalCurrentAssets', 
+    'TR.TotalCurrentAssets',
     'TR.TotalCurrentLiabilities',
-    'TR.TotalDebtOutstanding', 
+    'TR.TotalDebtOutstanding',
     'TR.CashAndSTInvestments',
     'TR.InterestExpense',
-    'TR.TotalEquity', 
+    'TR.F.IncTax',
+    'TR.TotalEquity',
     'TR.ResearchAndDevelopment',
+    'TR.F.RnD',
     'TR.OriginalAnnouncementDate',
     'TR.WACCTaxRate',
     'TR.TaxRateMean',
     'TR.F.DivPaidCashTotCF',
-    'TR.WACCERP',
     'TR.WACC'
 ]
 
@@ -35,7 +39,7 @@ PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'FQ', 'Curn' 
 
 if __name__ == "__main__":
     ld.open_session()
-    lseg_consensus.pull_and_save('fundamentals_raw', FIELDS, PARAMETERS)
+    lseg_consensus.pull_and_save('fundamentals_raw', FIELDS, PARAMETERS, chunk_size=8)
     ld.close_session()
 
 

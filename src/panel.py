@@ -64,17 +64,25 @@ def build_data() -> pd.DataFrame:
                 SELECT
                     s.Instrument,
                     s.quarter_date,
-                    f."Revenue"                          AS revenue_hist,
-                    f."Depreciation And Amortization"    AS da,
-                    f."Capital Expenditures, Cumulative" AS capex,
-                    f."Total Current Assets"             AS current_assets,
-                    f."Total Current Liabilities"        AS current_liabilities,
-                    f."Total Debt"                       AS total_debt,
-                    f."Cash and Short Term Investments"  AS cash,
-                    f."Interest Expense"                 AS interest_expense,
-                    f."Total Equity"                     AS book_equity,
-                    f."Research And Development"         AS rd_expense,
-                    
+                    f."Revenue"                                    AS revenue_hist,
+                    f."EBIT"                                       AS ebit_hist,
+                    f."Net Income Incl Extra Before Distributions" AS net_income,
+                    f."Depreciation And Amortization"              AS da_is,
+                    f."Depreciation & Amortization - Actual"       AS da_act,
+                    f."Depreciation Depletion & Amortization - Total" AS da_cfs,
+                    f."Capital Expenditures, Cumulative"           AS capex,
+                    f."Total Current Assets"                       AS current_assets,
+                    f."Total Current Liabilities"                  AS current_liabilities,
+                    f."Total Debt"                                 AS total_debt,
+                    f."Cash and Short Term Investments"            AS cash,
+                    f."Interest Expense"                           AS interest_expense,
+                    f."Total Equity"                               AS book_equity,
+                    f."Research And Development"                   AS rd_expense,
+                    f."WACC Tax Rate, (%)"                         AS wacc_tax_rate,
+                    f."Tax Rate - Mean"                            AS tax_rate_mean,
+                    f."Dividends Paid - Cash - Total - Cash Flow"  AS dividends_paid,
+                    f."Weighted Average Cost of Capital, (%)"      AS wacc,
+
                     ROW_NUMBER() OVER (
                         PARTITION BY s.Instrument, s.quarter_date
                         ORDER BY f."Date" DESC
@@ -130,7 +138,11 @@ def build_data() -> pd.DataFrame:
 
                 -- fundamentals (point-in-time)
                 ff.revenue_hist,
-                ff.da,
+                ff.ebit_hist,
+                ff.net_income,
+                ff.da_is,
+                ff.da_act,
+                ff.da_cfs,
                 ff.capex,
                 ff.current_assets,
                 ff.current_liabilities,
@@ -138,7 +150,11 @@ def build_data() -> pd.DataFrame:
                 ff.cash,
                 ff.interest_expense,
                 ff.book_equity,
-                ff.rd_expense
+                ff.rd_expense,
+                ff.wacc_tax_rate,
+                ff.tax_rate_mean,
+                ff.dividends_paid,
+                ff.wacc
 
             FROM spine s
             LEFT JOIN consensus_filtered cf

@@ -23,15 +23,17 @@ def get_lseg_universe() -> pd.DataFrame:
                   'IN(TR.TRBCIndustryCode,"56201040"),'
                   'IN(TR.HQCountryCode,"US"))'],
         fields=['TR.RIC', 'TR.OrganizationID',
-                'TR.CommonName','TR.IsDelistedQuote']
+                'TR.CommonName', 'TR.IsDelistedQuote',
+                'TR.InstrumentDelistedDate', 'TR.TRBCIndustryCode', 'TR.HQCountryCode']
     )
-    
+
     df_universe_inactive = ld.get_data(
         universe=['SCREEN(U(IN(Equity(inactive, public, primary))),'
                   'IN(TR.TRBCIndustryCode,"56201040"),'
                   'IN(TR.HQCountryCode,"US"))'],
         fields=['TR.RIC', 'TR.OrganizationID',
-                'TR.CommonName', 'TR.IsDelistedQuote']
+                'TR.CommonName', 'TR.IsDelistedQuote',
+                'TR.InstrumentDelistedDate', 'TR.TRBCIndustryCode', 'TR.HQCountryCode']
     )
     
     df_universe = pd.concat([df_universe_active, df_universe_inactive], ignore_index=True)
