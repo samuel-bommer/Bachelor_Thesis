@@ -9,4 +9,5 @@ dependencies = [
     "lseg-data>=2.1.1",
     "numpy>=2.5.1",
     "pandas>=2.3.3",
+    "yfinance>=1.7.0",
 ]
