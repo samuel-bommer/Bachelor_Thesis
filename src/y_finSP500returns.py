@@ -17,8 +17,8 @@ if __name__ == '__main__':
     SP_df = yf.download(ticker_sp, start='2000-01-01', end='2025-12-31', interval='1mo', auto_adjust=True)
     SP_df = SP_df[('Close', '^GSPC')].reset_index()
     SP_df.columns = ['date', 'close']
-    SP_df['returns'] = SP_df['close'].pct_change()
-    SP_df.dropna(subset=['returns'], inplace=True)
+    SP_df['mkt_return'] = SP_df['close'].pct_change()
+    SP_df.dropna(subset=['mkt_return'], inplace=True)
     
     with duckdb.connect(str(DB_PATH)) as con:
         con.execute('DROP TABLE IF EXISTS sp500_monthly')

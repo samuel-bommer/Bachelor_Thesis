@@ -9,6 +9,7 @@ for the  DCF calculation.
 import lseg_consensus
 import lseg.data as ld
 
+
 FIELDS = [
     'TR.Revenue.date',
     'TR.Revenue',

@@ -10,9 +10,11 @@ import pandas as pd
 import time
 from pathlib import Path
 
+
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 CHUNK_SIZE = 15
 SLEEP = 1.0
+
 
 def get_rics() -> list:
     """

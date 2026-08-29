@@ -32,6 +32,7 @@ dependencies = [
     { name = "lseg-data" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "python-dateutil" },
     { name = "yfinance" },
 ]
 
@@ -41,6 +42,7 @@ requires-dist = [
     { name = "lseg-data", specifier = ">=2.1.1" },
     { name = "numpy", specifier = ">=2.5.1" },
     { name = "pandas", specifier = ">=2.3.3" },
+    { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "yfinance", specifier = ">=1.7.0" },
 ]
 

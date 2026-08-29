@@ -7,7 +7,9 @@ from pathlib import Path
 import pandas as pd
 import duckdb
 
+
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
+
 
 def build_data() -> pd.DataFrame:
     """
