@@ -42,6 +42,7 @@ def OLS_beta(firm_return:float, market_return: float) -> float:
 
 quarter_points_bool = df_returns['date'].dt.month.isin([3, 6, 9, 12])
 quarter_points = df_returns[quarter_points_bool][['Instrument', 'date']]
+quarter_points = quarter_points.drop_duplicates(subset=['Instrument', 'date'])
 
 betas = []
 

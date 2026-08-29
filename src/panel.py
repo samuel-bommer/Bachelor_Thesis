@@ -120,7 +120,36 @@ def build_data() -> pd.DataFrame:
                     AND m."Date" <= s.quarter_date
             ),
             
-            market_filtered AS (SELECT * FROM market_pit WHERE rn = 1)
+            market_filtered AS (SELECT * FROM market_pit WHERE rn = 1),
+
+            betas_deduped AS (
+                SELECT
+                    Instrument,
+                    quarter_date,
+                    beta,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY Instrument, quarter_date
+                        ORDER BY quarter_date DESC
+                    ) AS rn
+                FROM betas
+            ),
+
+            betas_filtered AS (SELECT * FROM betas_deduped WHERE rn = 1),
+
+            rd_deduped AS (
+                SELECT
+                    Instrument,
+                    quarter_date,
+                    research_asset,
+                    rd_amortisation,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY Instrument, quarter_date
+                        ORDER BY quarter_date DESC
+                    ) AS rn
+                FROM rd_capitalised
+            ),
+
+            rd_filtered AS (SELECT * FROM rd_deduped WHERE rn = 1)
 
             SELECT
                 s.Instrument,
@@ -167,7 +196,11 @@ def build_data() -> pd.DataFrame:
                 ff.wacc,
                 
                 --beta
-                b.beta
+                b.beta,
+                
+                --rd asset
+                rd.research_asset,
+                rd.rd_amortisation
 
             FROM spine s
             LEFT JOIN consensus_filtered cf
@@ -176,8 +209,10 @@ def build_data() -> pd.DataFrame:
                 ON s.Instrument = mf.Instrument AND s.quarter_date = mf.quarter_date
             LEFT JOIN fundamentals_filtered ff
                 ON s.Instrument = ff.Instrument AND s.quarter_date = ff.quarter_date
-            LEFT JOIN betas b
+            LEFT JOIN betas_filtered b
                 ON s.Instrument = b.Instrument AND s.quarter_date = b.quarter_date
+            LEFT JOIN rd_filtered rd
+                ON s.Instrument = rd.Instrument AND s.quarter_date = rd.quarter_date
         """)
         
         df = con.execute('SELECT * FROM panel_clean').df()

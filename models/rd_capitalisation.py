@@ -26,6 +26,7 @@ df_rd_fund.rename(columns={
 
 df_rd_combined = pd.concat([df_rd_fund, df_rd_hist], ignore_index=True).sort_values(['Instrument', 'Date'])
 df_rd_combined = df_rd_combined.dropna(subset=['Date', 'Research And Development'])
+df_rd_combined = df_rd_combined.drop_duplicates(subset=['Instrument', 'Date'])
 
 # ====================== R&D Captialisation =========================
 
