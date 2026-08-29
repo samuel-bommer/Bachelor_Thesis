@@ -24,7 +24,8 @@ with duckdb.connect(str(DB_PATH)) as con:
         JOIN sp500_monthly s ON DATE_TRUNC('month', r.Date::DATE) = DATE_TRUNC('month', s.date)
         ORDER BY r.Instrument, r.Date
     """).df()
-    
+
+# ========================= Beta calculation ===========================    
 
 def OLS_beta(firm_return:float, market_return: float) -> float:
     """
@@ -68,6 +69,7 @@ for _, row in quarter_points.iterrows():
 
 df_betas = pd.DataFrame(betas)
 
+# ====================== Saving output in DB =========================
 
 with duckdb.connect(str(DB_PATH)) as con:
     con.execute('DROP TABLE IF EXISTS betas')
