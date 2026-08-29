@@ -164,7 +164,10 @@ def build_data() -> pd.DataFrame:
                 ff.wacc_tax_rate,
                 ff.tax_rate_mean,
                 ff.dividends_paid,
-                ff.wacc
+                ff.wacc,
+                
+                --beta
+                b.beta
 
             FROM spine s
             LEFT JOIN consensus_filtered cf
@@ -173,6 +176,8 @@ def build_data() -> pd.DataFrame:
                 ON s.Instrument = mf.Instrument AND s.quarter_date = mf.quarter_date
             LEFT JOIN fundamentals_filtered ff
                 ON s.Instrument = ff.Instrument AND s.quarter_date = ff.quarter_date
+            LEFT JOIN betas b
+                ON s.Instrument = b.Instrument AND s.quarter_date = b.quarter_date
         """)
         
         df = con.execute('SELECT * FROM panel_clean').df()
