@@ -1,6 +1,12 @@
 """
 This file is stricly for inspecting the data that
 we retrieved. (Essentially a helper file)
+
+This is not used for anything other than looking
+and checking the tables that we have in the DuckDB.
+
+I run this file through a jupyter notebook and
+interactively explore the data
 """
 
 import duckdb
