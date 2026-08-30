@@ -200,7 +200,10 @@ def build_data() -> pd.DataFrame:
                 
                 --rd asset
                 rd.research_asset,
-                rd.rd_amortisation
+                rd.rd_amortisation,
+                
+                --riskfree
+                rf.DGS10
 
             FROM spine s
             LEFT JOIN consensus_filtered cf
@@ -213,6 +216,8 @@ def build_data() -> pd.DataFrame:
                 ON s.Instrument = b.Instrument AND s.quarter_date = b.quarter_date
             LEFT JOIN rd_filtered rd
                 ON s.Instrument = rd.Instrument AND s.quarter_date = rd.quarter_date
+            LEFT JOIN riskfreerate rf
+                ON s.quarter_date = rf.date
         """)
         
         df = con.execute('SELECT * FROM panel_clean').df()
