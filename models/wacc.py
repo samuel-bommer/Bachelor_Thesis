@@ -31,13 +31,21 @@ with duckdb.connect(str(DB_PATH)) as con:
 # ========================= Cost of Equity ==========================
 
 EQUITY_RISK_PREMIUM = 0.05
+PHARMA_SECTOR_BETA = 0.98
 
-def get_cost_equity(erp: float, riskfree: float) -> float:
+def get_cost_equity(riskfree: pd.Series, beta: pd.Series ) -> pd.Series:
     """
     The cost of equity: r_e = rf + beta * ERP
-    where the ERP is kept constant
+    where the ERP is kept constant. 
+    
+    If no beta is in the list, we use the Pharma
+    sector beta from Damodaran
+    https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/Betas.html
     """
-    pass
+    
+    beta_filled = beta.fillna(PHARMA_SECTOR_BETA)
+    cost_of_equity = riskfree + beta_filled * EQUITY_RISK_PREMIUM
+    return cost_of_equity
 
 # ========================== Cost of Debt ===========================
 
@@ -59,6 +67,8 @@ COVERAGE_SPREADS = [ #interest coverage low, high, spread
     (8.50,    100000,  0.0040),  # Aaa/AAA
 ]
 
+PHARMA_SECTOR_SPREAD = 0.011
+
 def get_spread(interest_coverage: float) -> float:
     """
     Return the synthetic spread from the Damodaran table
@@ -71,25 +81,41 @@ def get_spread(interest_coverage: float) -> float:
     for lower, upper, spread in COVERAGE_SPREADS:
         if lower <= interest_coverage <= upper:
             return spread
-        return 0.0111
+        return PHARMA_SECTOR_SPREAD
 
 
-def get_cost_debt(spread: float, riskfree: float) -> float:
+def get_cost_debt(ebit: pd.Series, interest: pd.Series, riskfree: pd.Series) -> pd.Series:
     """
     The cost of debt: r_d = rf + synthetic_rating
     the synthetic rating is calculated by Damodarans
     table;
     https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ratings.html
     """
-    pass
+    coverage_ratio = (ebit / interest).replace([np.inf, -np.inf], np.nan)
+    
+    spreads = []
+    for cov in coverage_ratio:
+        if pd.isna(cov):
+            spreads.append(PHARMA_SECTOR_SPREAD)
+        else:
+            spreads.append(get_spread(cov))
+            
+    spread_series = pd.Series(spreads, index=ebit.index)
+    cost_of_debt = spread_series + riskfree
+    return cost_of_debt
 
 # ============================= WACC =============================
 
-def get_wacc() -> float:
+def get_wacc(df: pd.DataFrame) -> pd.DataFrame:
     """
     Get the wacc
     """
-    pass 
+    
+    cost_of_equity = get_cost_equity(df['DGS10'], df['beta'])
+    cost_of_debt = get_cost_debt(df['ebit_hist'], df['interest_expense'], df['DGS10'])
+    
+    firm_value = df['market_cap'] + df['total_debt']
+    
 
 
 
