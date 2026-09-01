@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import Path
 import duckdb
 
+
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 
 
