@@ -5,7 +5,6 @@ Instrument.
 WACC = E /(D+E) * r_e + D /(D+E) * r_d * (1-tax)
 """
 
-
 import pandas as pd
 import numpy as np
 import duckdb
@@ -81,7 +80,7 @@ def get_spread(interest_coverage: float) -> float:
     for lower, upper, spread in COVERAGE_SPREADS:
         if lower <= interest_coverage <= upper:
             return spread
-        return PHARMA_SECTOR_SPREAD
+    return PHARMA_SECTOR_SPREAD
 
 
 def get_cost_debt(ebit: pd.Series, interest: pd.Series, riskfree: pd.Series) -> pd.Series:
@@ -106,18 +105,56 @@ def get_cost_debt(ebit: pd.Series, interest: pd.Series, riskfree: pd.Series) -> 
 
 # ============================= WACC =============================
 
-def get_wacc(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Get the wacc
-    """
-    
-    cost_of_equity = get_cost_equity(df['DGS10'], df['beta'])
-    cost_of_debt = get_cost_debt(df['ebit_hist'], df['interest_expense'], df['DGS10'])
-    
-    firm_value = df['market_cap'] + df['total_debt']
-    
+PHARMA_DEBT_WEIGHT = 0.14
 
+def get_wacc(quarter_date: pd.Series,
+             riskfree: pd.Series, 
+             ebit: pd.Series,
+             interest: pd.Series,
+             beta: pd.Series,
+             market_cap: pd.Series,
+             debt: pd.Series
+             ) -> pd.Series:
+    """
+    Get the wacc.
+    Using US marginal tax rates of 0.35 before 2018 and 
+    0.21 starting 2018
+    
+    Using Damodaran debt to firm_value ratio as a fallback
+    https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/dbtfund.html
+    """
+    
+    tax = pd.Series(np.where(quarter_date < '2018-01-01', 0.21, 0.35), index=ebit.index)
+    cost_of_equity = get_cost_equity(riskfree, beta)
+    cost_of_debt = get_cost_debt(ebit, interest, riskfree)
+    
+    firm_value = market_cap + debt
+
+    equity_portion = cost_of_equity * (market_cap / firm_value).fillna(1 - PHARMA_DEBT_WEIGHT)
+    debt_portion = cost_of_debt * (debt / firm_value).fillna(PHARMA_DEBT_WEIGHT) * (1-tax)
+    wacc = equity_portion + debt_portion
+    
+    return wacc
 
 
 if __name__ == '__main__':
-    pass
+    wacc = get_wacc(
+        df_wacc['quarter_date'],
+        df_wacc['DGS10'],
+        df_wacc['ebit_hist'],
+        df_wacc['interest_expense'],
+        df_wacc['beta'],
+        df_wacc['market_cap'],
+        df_wacc['total_debt']
+        )
+    
+    df_wacc_out = pd.DataFrame({
+        'Instrument': df_wacc['Instrument'],
+        'quarter_date': df_wacc['quarter_date'],
+        'wacc': wacc
+    })
+    
+    with duckdb.connect(str(DB_PATH)) as con:
+        con.execute('DROP TABLE IF EXISTS wacc_computed')
+        con.register('df_wacc_out', df_wacc_out[['Instrument', 'quarter_date', 'wacc']])
+        con.execute('CREATE TABLE wacc_computed AS SELECT * FROM df_wacc_out')

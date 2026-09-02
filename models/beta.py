@@ -68,11 +68,12 @@ for _, row in quarter_points.iterrows():
         'beta': beta
     })
 
-df_betas = pd.DataFrame(betas)
 
-# ====================== Saving output in DB =========================
+if __name__ == '__main__':
+    
+    df_betas = pd.DataFrame(betas)
 
-with duckdb.connect(str(DB_PATH)) as con:
-    con.execute('DROP TABLE IF EXISTS betas')
-    con.register('df_betas', df_betas)
-    con.execute('CREATE TABLE betas AS SELECT * FROM df_betas')
+    with duckdb.connect(str(DB_PATH)) as con:
+        con.execute('DROP TABLE IF EXISTS betas')
+        con.register('df_betas', df_betas)
+        con.execute('CREATE TABLE betas AS SELECT * FROM df_betas')
