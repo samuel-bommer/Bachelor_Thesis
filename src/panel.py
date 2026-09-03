@@ -87,7 +87,7 @@ def build_data() -> pd.DataFrame:
                     f."WACC Tax Rate, (%)"                         AS wacc_tax_rate,
                     f."Tax Rate - Mean"                            AS tax_rate_mean,
                     f."Dividends Paid - Cash - Total - Cash Flow"  AS dividends_paid,
-                    f."Weighted Average Cost of Capital, (%)"      AS wacc,
+                    f."Weighted Average Cost of Capital, (%)"      AS wacc_lseg,
 
                     ROW_NUMBER() OVER (
                         PARTITION BY s.Instrument, s.quarter_date
@@ -193,7 +193,7 @@ def build_data() -> pd.DataFrame:
                 ff.wacc_tax_rate,
                 ff.tax_rate_mean,
                 ff.dividends_paid,
-                ff.wacc,
+                ff.wacc_lseg,
                 
                 --beta
                 b.beta,
@@ -203,7 +203,10 @@ def build_data() -> pd.DataFrame:
                 rd.rd_amortisation,
                 
                 --riskfree
-                rf.DGS10
+                rf.DGS10,
+                
+                -- wacc
+                wc.wacc    AS wacc_computed
 
             FROM spine s
             LEFT JOIN consensus_filtered cf
@@ -218,6 +221,9 @@ def build_data() -> pd.DataFrame:
                 ON s.Instrument = rd.Instrument AND s.quarter_date = rd.quarter_date
             LEFT JOIN riskfreerate rf
                 ON s.quarter_date = rf.date
+            LEFT JOIN wacc_computed wc
+                ON s.Instrument = wc.Instrument AND s.quarter_date = wc.quarter_date
+
         """)
         
         df = con.execute('SELECT * FROM panel_clean').df()
