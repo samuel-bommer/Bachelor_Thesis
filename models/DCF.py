@@ -45,6 +45,8 @@ class DCF:
         # We still need to calculate the ratios
         self.da_ratio = row['da_rev_ratio_mean']
         self.capex_ratio = row['capex_rev_ratio_mean']
+        #Still need delta NWC for fcff
+        self.delta_nwc = row['delta_NWC']
 
     def fcff(self, ebit, revenue) -> float:
         """
@@ -53,7 +55,18 @@ class DCF:
         """
         
         nopat = ebit + (1 - self.marignal_tax)
-        da = revenue * self.
+        da = revenue * self.da_ratio
+        capex = revenue * self.capex_ratio
+        fcff = nopat + da - capex
+        
+        return 
+    
+    def cash_flows(self) -> list[float]:
+        pass
+    
+    def intrinsic_value(self) -> float:
+        pass
+    
 
 if __name__ == '__main__':
     pass
