@@ -9,20 +9,32 @@ I run this file through a jupyter notebook and
 interactively explore the data
 """
 
+
 import duckdb
+from pathlib import Path
+import os
 
 
-con = duckdb.connect('../data/thesis.duckdb')
-df_universe = con.execute("SELECT * FROM universe LIMIT 100").df()
-df_consensus = con.execute("SELECT * FROM consensus_raw LIMIT 1000").df()
-df_fundamentals = con.execute("SELECT * FROM fundamentals_raw LIMIT 1000").df()
-df_rd_hist = con.execute("SELECT * FROM rd_history_raw LIMIT 1000").df()
-df_marketcap = con.execute("SELECT * FROM market_cap_raw LIMIT 1000").df()
-df_price = con.execute("SELECT * FROM returns_raw LIMIT 1000").df()
-df_panel_clean = con.execute("SELECT * FROM panel_clean").df()
-df_betas = con.execute("SELECT * FROM betas").df()
-df_rd_capitalised = con.execute("SELECT * FROM rd_capitalised").df()
-df_riskfree = con.execute("SELECT * FROM riskfreerate").df()
-df_wacc_computed = con.execute("SELECT * FROM wacc_computed").df()
-con.execute("SHOW TABLES").df()
-con.close()
+DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
+
+
+with duckdb.connect(DB_PATH) as con:
+    df_universe = con.execute("SELECT * FROM universe LIMIT 100").df()
+    df_consensus = con.execute("SELECT * FROM consensus_raw LIMIT 1000").df()
+    df_fundamentals = con.execute("SELECT * FROM fundamentals_raw LIMIT 1000").df()
+    df_rd_hist = con.execute("SELECT * FROM rd_history_raw LIMIT 1000").df()
+    df_marketcap = con.execute("SELECT * FROM market_cap_raw LIMIT 1000").df()
+    df_price = con.execute("SELECT * FROM returns_raw LIMIT 1000").df()
+    df_panel_clean = con.execute("SELECT * FROM panel_clean").df()
+    df_betas = con.execute("SELECT * FROM betas").df()
+    df_rd_capitalised = con.execute("SELECT * FROM rd_capitalised").df()
+    df_riskfree = con.execute("SELECT * FROM riskfreerate").df()
+    df_wacc_computed = con.execute("SELECT * FROM wacc_computed").df()
+
+# ========================== Inspect in CSV =========================
+
+if __name__ == '__main__':
+    path_download = '/Users/sam/Downloads'
+    file_output = os.path.join(path_download, 'panel_clean_data.csv')
+    df_panel_clean.sort_values(['Instrument', 'quarter_date'], inplace=True)
+    df_panel_clean.to_csv(file_output)

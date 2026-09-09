@@ -124,7 +124,7 @@ def get_wacc(quarter_date: pd.Series,
     https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/dbtfund.html
     """
     
-    tax = pd.Series(np.where(quarter_date < '2018-01-01', 0.21, 0.35), index=ebit.index)
+    tax = pd.Series(np.where(quarter_date < '2018-01-01', 0.35, 0.21), index=ebit.index)
     cost_of_equity = get_cost_equity(riskfree, beta)
     cost_of_debt = get_cost_debt(ebit, interest, riskfree)
     
