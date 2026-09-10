@@ -68,7 +68,25 @@ df_prc['delta_nwc_rev'] = (df_prc['nwc'] - df_prc['nwc_lag4']) / df_prc['revenue
 df_prc['net_reinvestment_ratio'] = (
     df_prc['smooth_capex_ratio']
     - df_prc['smooth_da_ratio']
-    + df_prc['delta_nwc_rec']
+    + df_prc['delta_nwc_rev']
 )
 
 # =========================== Save to DB =================================
+
+with duckdb.connect(DB_PATH) as con:
+    con.execute('DROP TABLE IF EXISTS preprocessing')
+    con.register('df_prc', df_prc)
+    con.execute(
+        """
+        CREATE TABLE preprocessing AS
+        SELECT
+            Instrument,
+            quarter_date,
+            adj_ebit,
+            adj_ebit_margin,
+            smooth_capex_ratio,
+            smooth_da_ratio,
+            delta_nwc_rev,
+            net_reinvestment_ratio
+        FROM df_prc
+        """)

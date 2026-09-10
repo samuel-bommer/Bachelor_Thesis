@@ -18,7 +18,21 @@ def load_panel() -> pd.DataFrame:
     """
     
     with duckdb.connect(str(DB_PATH)) as con:
-        return con.execute("SELECT * FROM panel_clean").df()
+        df_panel = con.execute("""
+            SELECT p.*,
+                pr.adj_ebit,
+                pr.adj_ebit_margin,
+                pr.smooth_capex_ratio,
+                pr.smooth_da_ratio,
+                pr.delta_nwc_rev,
+                pr.net_reinvestment_ratio
+            FROM panel_clean p
+            LEFT JOIN preprocessing pr
+                ON p.Instrument = pr.Instrument
+                AND p.quarter_date = pr.quarter_date
+            """).df()
+        
+    return df_panel
     
 
 class DCF:
@@ -43,12 +57,12 @@ class DCF:
         self.wacc_computed = row['wacc_computed']
         self.marginal_tax = 0.35 if row['quarterdate'] < '2018-01-01' else 0.21
         # We still need to calculate the ratios
-        self.da_ratio = row['da_rev_ratio_mean']
-        self.capex_ratio = row['capex_rev_ratio_mean']
+        self.da_ratio = row['smooth_da_ratio']
+        self.capex_ratio = row['smooth_capex_ratio']
         #Still need delta NWC for fcff
-        self.delta_nwc = row['delta_NWC']
+        self.delta_nwc = row['delta_NWC_rev']
 
-    def fcff(self, ebit, revenue) -> float:
+    def fcff(self, ebit: float, revenue: float) -> float:
         """
         Calculate free cash flow to firm, using average CapEx values
         to smoothen them
@@ -59,7 +73,7 @@ class DCF:
         capex = revenue * self.capex_ratio
         fcff = nopat + da - capex
         
-        return 
+        return fcff
     
     def cash_flows(self) -> list[float]:
         pass
