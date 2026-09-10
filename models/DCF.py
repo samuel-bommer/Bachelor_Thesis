@@ -71,7 +71,7 @@ class DCF:
         nopat = ebit + (1 - self.marignal_tax)
         da = revenue * self.da_ratio
         capex = revenue * self.capex_ratio
-        fcff = nopat + da - capex
+        fcff = nopat + da - capex - self.delta_nwc
         
         return fcff
     
