@@ -33,7 +33,13 @@ def load_panel() -> pd.DataFrame:
             """).df()
         
     return df_panel
-    
+
+# ============================ DCF calculation =========================
+# Using Damodaran figures
+TERMINAL_GROWTH = 0.025
+FORECAST_HORIZON = 10
+PHARMA_LTG_FALLBACK = 0.178
+PHARMA_CAP = 0.4
 
 class DCF:
     
@@ -50,18 +56,33 @@ class DCF:
         self.eps_fy3 = row['eps_mean_fy3']
         self.rev_1 = row['rev_mean_fy1']
         self.rev_2 = row['rev_mean_fy2']
-        self.ltg = row['ltg_mean']
+        self.ltg = self._get_ltg()
         self.market_cap = row['market_cap']
         self.net_debt = row['total_debt'] - row['cash']
         self.n_analysts = row['n_analysts']
         self.wacc_computed = row['wacc_computed']
         self.marginal_tax = 0.35 if row['quarterdate'] < '2018-01-01' else 0.21
-        # We still need to calculate the ratios
+
         self.da_ratio = row['smooth_da_ratio']
         self.capex_ratio = row['smooth_capex_ratio']
-        #Still need delta NWC for fcff
-        self.delta_nwc = row['delta_NWC_rev']
 
+        self.delta_nwc = row['delta_NWC_rev']
+        
+        self.fcff_10 = 0        
+
+    def _get_ltg(self) -> float:
+        """
+        Helper function to get the long term growth
+        """
+        
+        if pd.notna(self.ltg) and self.ltg > 0:
+            return min(self.ltg, PHARMA_CAP)
+        if pd.notna(self.rev_fy1) and pd.notna(self.rev_fy2) and self.rev_fy1 > 0:
+            return (self.rev_fy2 - self.rev_fy1) / self.rev_fy1
+        
+        return PHARMA_LTG_FALLBACK
+    
+    
     def fcff(self, ebit: float, revenue: float) -> float:
         """
         Calculate free cash flow to firm, using average CapEx values
@@ -75,11 +96,53 @@ class DCF:
         
         return fcff
     
-    def cash_flows(self) -> list[float]:
-        pass
     
-    def intrinsic_value(self) -> float:
-        pass
+    def cash_flows(self, years: int=FORECAST_HORIZON) -> tuple[list[float], float, float]:
+        """
+        Projecting cashflows over the FORECAST_HORIZION, using the 
+        analyst estimates. We have the first two years and extrapolate 
+        from there. We get the growth rate by fading ltg linearly to
+        terminal growth
+        """
+        
+        flows = []
+
+        flows.append(self.fcff(self.ebit_fy1, self.rev_fy1))
+        flows.append(self.fcff(self.ebit_fy2, self.rev_fy2))
+
+        rev3  = self.rev_fy2 * (1 + self.ltg)
+        ebit3 = rev3 * self.ebit_margin
+        flows.append(self.fcff(ebit3, rev3))
+
+        rev_t  = rev3
+        ebit_t = ebit3
+        for t in range(4, years + 1):
+            fade   = (t - 3) / (years - 3)  
+            g_t    = self.ltg + fade * (TERMINAL_GROWTH - self.ltg)
+            rev_t  = rev_t  * (1 + g_t)
+            ebit_t = rev_t  * self.ebit_margin
+            flows.append(self.fcff(ebit_t, rev_t))
+        
+        self.fcff_10 = flows[-1]
+
+        return flows, ebit_t, rev_t
+    
+    
+    def terminal_value_calc(self) -> float:
+        """
+        Teriminal value
+        """
+        
+        terminal_value = (self.fcff_10 * (1 + TERMINAL_GROWTH)) / (self.wacc_computed - TERMINAL_GROWTH)
+        return terminal_value
+    
+    
+    def intrinsic_value(self) -> float | None:
+        """
+        Calculate intrinsic value
+        """
+        
+        flows = self.cash_flows()
     
 
 if __name__ == '__main__':
