@@ -67,8 +67,7 @@ class DCF:
         self.capex_ratio = row['smooth_capex_ratio']
 
         self.delta_nwc = row['delta_NWC_rev']
-        
-        self.fcff_10 = 0        
+    
 
     def _get_ltg(self) -> float:
         """
@@ -122,18 +121,16 @@ class DCF:
             rev_t  = rev_t  * (1 + g_t)
             ebit_t = rev_t  * self.ebit_margin
             flows.append(self.fcff(ebit_t, rev_t))
-        
-        self.fcff_10 = flows[-1]
 
         return flows, ebit_t, rev_t
     
     
-    def terminal_value_calc(self) -> float:
+    def terminal_value_calc(self, fcff_10: float) -> float:
         """
         Teriminal value
         """
         
-        terminal_value = (self.fcff_10 * (1 + TERMINAL_GROWTH)) / (self.wacc_computed - TERMINAL_GROWTH)
+        terminal_value = (fcff_10 * (1 + TERMINAL_GROWTH)) / (self.wacc_computed - TERMINAL_GROWTH)
         return terminal_value
     
     
@@ -143,7 +140,22 @@ class DCF:
         """
         
         flows = self.cash_flows()
-    
+        terminal_value = self.terminal_value_calc(flows[-1])
+        
+        pv_cashflows = 0.0
+        for t, fcff in enumerate(flows):
+            pv_cashflows += fcff / ((1 + self.wacc_computed) **(t + 1))
+
+        pv_terminal_value = terminal_value / ((1 + self.wacc_computed) ** FORECAST_HORIZON)
+        
+        firm_value = pv_cashflows + pv_terminal_value
+        equity_value = firm_value - self.net_debt
+        
+        if equity_value <= 0:
+            return None
+        
+        return equity_value
+
 
 if __name__ == '__main__':
     pass
