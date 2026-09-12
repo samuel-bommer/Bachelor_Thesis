@@ -30,6 +30,8 @@ def load_panel() -> pd.DataFrame:
                 pr.adj_ebit_margin,
                 pr.smooth_capex_ratio,
                 pr.smooth_da_ratio,
+                pr.smooth_rd_ratio,
+                pr.smooth_rd_amort_ratio,
                 pr.delta_nwc_rev,
                 pr.net_reinvestment_ratio
             FROM panel_clean p
@@ -73,6 +75,8 @@ class DCF:
 
         self.da_ratio = row['smooth_da_ratio']
         self.capex_ratio = row['smooth_capex_ratio']
+        self.rd_ratio = row['smooth_rd_ratio']
+        self.rd_amort_ratio = row['smooth_rd_amort_ratio']
 
         self.delta_nwc = row['delta_nwc_rev']
     
@@ -90,15 +94,15 @@ class DCF:
         return PHARMA_LTG_FALLBACK
     
     
-    def fcff(self, ebit: float, revenue: float, capex_ratio: float, da_ratio: float) -> float:
+    def fcff(self, ebit: float, revenue: float) -> float:
         """
         Calculate free cash flow to firm, using average CapEx values
         to smoothen them
         """
         
         nopat = ebit * (1 - self.marginal_tax)
-        da = revenue * da_ratio
-        capex = revenue * capex_ratio
+        da = revenue * self.da_ratio
+        capex = revenue * self.capex_ratio
         fcff = nopat + da - capex - (revenue * self.delta_nwc)
         
         return fcff
@@ -113,9 +117,12 @@ class DCF:
         """
         
         flows = []
+        
+        adj_ebit_fy1 = self.ebit_fy1 + self.rev_fy1 * (self.rd_ratio - self.rd_amort_ratio)
+        adj_ebit_fy2 = self.ebit_fy2 + self.rev_fy2 * (self.rd_ratio - self.rd_amort_ratio)
 
-        flows.append(self.fcff(self.ebit_fy1, self.rev_fy1))
-        flows.append(self.fcff(self.ebit_fy2, self.rev_fy2))
+        flows.append(self.fcff(adj_ebit_fy1, self.rev_fy1))
+        flows.append(self.fcff(adj_ebit_fy2, self.rev_fy2))
 
         rev_fy3  = self.rev_fy2 * (1 + self.ltg)
         ebit3 = rev_fy3 * self.ebit_margin
@@ -146,6 +153,9 @@ class DCF:
         """
         Calculate intrinsic value
         """
+        
+        if self.wacc_computed <= TERMINAL_GROWTH:
+            return None
         
         flows, _, _ = self.cash_flows()
         terminal_value = self.terminal_value_calc(flows[-1])

@@ -36,7 +36,7 @@ FIELDS = [
 ]
 
 PARAMETERS = {'SDate': '2005-01-01', 'EDate': '2025-12-31', 'Frq': 'FQ', 'Curn' : 'USD'}
-
+# currently pulling incorrectly. Possibly add 'Period': 'FQ0' to the dictionary
 
 if __name__ == "__main__":
     ld.open_session()

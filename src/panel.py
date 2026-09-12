@@ -1,6 +1,11 @@
 """
 Create a useable dataframe: query of duckdb
 database.
+
+Important to note that values in fundamentals
+and in RD are carried forward. Meaning we use
+the last value until a new one pops up. This is 
+valid as we later filter by analyst coverage.
 """
 
 from pathlib import Path
@@ -138,15 +143,18 @@ def build_data() -> pd.DataFrame:
 
             rd_deduped AS (
                 SELECT
-                    Instrument,
-                    quarter_date,
-                    research_asset,
-                    rd_amortisation,
+                    s.Instrument,
+                    s.quarter_date,
+                    r.research_asset,
+                    r.rd_amortisation,
                     ROW_NUMBER() OVER (
-                        PARTITION BY Instrument, quarter_date
-                        ORDER BY quarter_date DESC
+                        PARTITION BY s.Instrument, s.quarter_date
+                        ORDER BY r.quarter_date DESC
                     ) AS rn
-                FROM rd_capitalised
+                FROM spine s
+                JOIN rd_capitalised r
+                    ON s.Instrument = r.Instrument
+                    AND r.quarter_date <= s.quarter_date
             ),
 
             rd_filtered AS (SELECT * FROM rd_deduped WHERE rn = 1)
@@ -234,3 +242,9 @@ def build_data() -> pd.DataFrame:
 
 if __name__ == '__main__':
     build_data()
+    
+    
+"""
+Data quality note — fundamentals staleness:
+The panel spine includes both active and inactive US pharma equities (to avoid survivorship bias). For firms that delisted or lost LSEG coverage mid-sample, the most-recent-before join carries the last available annual fundamental forward indefinitely. A staleness check revealed 58 affected firms and 1,724 firm-quarters with fundamentals more than 12 months out of date. Only one of these firms survives into the final DCF regression sample, as the n_analysts ≥ 3 filter naturally excludes firms that have lost analyst coverage alongside their data coverage. The one remaining firm represents a minor limitation acknowledged here.
+"""

@@ -61,8 +61,13 @@ df_prc['da_rev'] = df_prc['da_adj'] / df_prc['revenue_hist']
 df_prc['adj_ebit_margin'] = df_prc['adj_ebit'] / df_prc['revenue_hist']
 
 df_prc['smooth_capex_ratio'] = df_prc.groupby('Instrument', sort=False)['capex_rev'].transform(smooth_mean)
-
 df_prc['smooth_da_ratio'] = df_prc.groupby('Instrument', sort=False)['da_rev'].transform(smooth_mean)
+
+df_prc['rd_rev'] = df_prc['rd_expense'].fillna(0) / df_prc['revenue_hist']
+df_prc['rd_amort_rev'] = df_prc['rd_amortisation'].fillna(0) / df_prc['revenue_hist']
+
+df_prc['smooth_rd_ratio'] = df_prc.groupby('Instrument', sort=False)['rd_rev'].transform(smooth_mean)
+df_prc['smooth_rd_amort_ratio'] = df_prc.groupby('Instrument', sort=False)['rd_amort_rev'].transform(smooth_mean)
 
 # Will most likely be changed later, quarters are populated with fully year numbers
 df_prc['nwc_lag4'] = df_prc.groupby('Instrument', sort=False)['nwc'].transform(annual_lag)
@@ -92,6 +97,8 @@ with duckdb.connect(DB_PATH) as con:
             adj_ebit_margin,
             smooth_capex_ratio,
             smooth_da_ratio,
+            smooth_rd_ratio,
+            smooth_rd_amort_ratio,
             delta_nwc_rev,
             net_reinvestment_ratio
         FROM df_prc
