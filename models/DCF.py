@@ -54,19 +54,21 @@ class DCF:
         self.eps_fy1 = row['eps_mean_fy1']
         self.eps_fy2 = row['eps_mean_fy2']
         self.eps_fy3 = row['eps_mean_fy3']
-        self.rev_1 = row['rev_mean_fy1']
-        self.rev_2 = row['rev_mean_fy2']
+        self.rev_fy1 = row['rev_mean_fy1']
+        self.rev_fy2 = row['rev_mean_fy2']
+        self.ebit_margin = row['adj_ebit_margin']
+        self.ltg_mean = row['ltg_mean']
         self.ltg = self._get_ltg()
         self.market_cap = row['market_cap']
         self.net_debt = row['total_debt'] - row['cash']
         self.n_analysts = row['n_analysts']
         self.wacc_computed = row['wacc_computed']
-        self.marginal_tax = 0.35 if row['quarterdate'] < '2018-01-01' else 0.21
+        self.marginal_tax = 0.35 if row['quarter_date'] < pd.Timestamp('2018-01-01') else 0.21
 
         self.da_ratio = row['smooth_da_ratio']
         self.capex_ratio = row['smooth_capex_ratio']
 
-        self.delta_nwc = row['delta_NWC_rev']
+        self.delta_nwc = row['delta_nwc_rev']
     
 
     def _get_ltg(self) -> float:
@@ -74,8 +76,8 @@ class DCF:
         Helper function to get the long term growth
         """
         
-        if pd.notna(self.ltg) and self.ltg > 0:
-            return min(self.ltg, PHARMA_CAP)
+        if pd.notna(self.ltg_mean) and self.ltg_mean > 0:
+            return min(self.ltg_mean, PHARMA_CAP)
         if pd.notna(self.rev_fy1) and pd.notna(self.rev_fy2) and self.rev_fy1 > 0:
             return (self.rev_fy2 - self.rev_fy1) / self.rev_fy1
         
@@ -88,7 +90,7 @@ class DCF:
         to smoothen them
         """
         
-        nopat = ebit + (1 - self.marignal_tax)
+        nopat = ebit + (1 - self.marginal_tax)
         da = revenue * self.da_ratio
         capex = revenue * self.capex_ratio
         fcff = nopat + da - capex - self.delta_nwc
@@ -109,11 +111,11 @@ class DCF:
         flows.append(self.fcff(self.ebit_fy1, self.rev_fy1))
         flows.append(self.fcff(self.ebit_fy2, self.rev_fy2))
 
-        rev3  = self.rev_fy2 * (1 + self.ltg)
-        ebit3 = rev3 * self.ebit_margin
-        flows.append(self.fcff(ebit3, rev3))
+        rev_fy3  = self.rev_fy2 * (1 + self.ltg)
+        ebit3 = rev_fy3 * self.ebit_margin
+        flows.append(self.fcff(ebit3, rev_fy3))
 
-        rev_t  = rev3
+        rev_t  = rev_fy3
         ebit_t = ebit3
         for t in range(4, years + 1):
             fade   = (t - 3) / (years - 3)  
@@ -134,28 +136,54 @@ class DCF:
         return terminal_value
     
     
-    def intrinsic_value(self) -> float | None:
+    def intrinsic_value_calc(self) -> float | None:
         """
         Calculate intrinsic value
         """
         
-        flows = self.cash_flows()
+        flows, _, _ = self.cash_flows()
         terminal_value = self.terminal_value_calc(flows[-1])
         
         pv_cashflows = 0.0
         for t, fcff in enumerate(flows):
-            pv_cashflows += fcff / ((1 + self.wacc_computed) **(t + 1))
+            pv_cashflows += fcff / ((1 + self.wacc_computed) ** (t + 1))
 
         pv_terminal_value = terminal_value / ((1 + self.wacc_computed) ** FORECAST_HORIZON)
         
         firm_value = pv_cashflows + pv_terminal_value
         equity_value = firm_value - self.net_debt
         
-        if equity_value <= 0:
+        if pd.isna(equity_value) or equity_value <= 0:
             return None
         
         return equity_value
-
+    
+# ================================ Running the DCF ===========================
 
 if __name__ == '__main__':
-    pass
+    
+    df_panel = load_panel()
+    df_filter = df_panel[df_panel['n_analysts'] >= 3].copy()
+    
+    results = []
+    
+    for _, row in df_filter.iterrows():
+        dcf = DCF(row)
+        intrinsic_value = dcf.intrinsic_value_calc()
+        
+        if intrinsic_value is None:
+            continue
+        
+        results.append({
+            'Instrument': row['Instrument'],
+            'quarter_date': row['quarter_date'],
+            'intrinsic_value': intrinsic_value,
+            'market_cap': row['market_cap'],
+            'valuation_error': np.log(row['market_cap'] / intrinsic_value)
+        })
+        
+        df_valuation_error = pd.DataFrame(results)
+        
+        firm_counts = df_valuation_error.groupby('Instrument')['quarter_date'].count()
+        firms_keep = firm_counts[firm_counts >= 6].index
+        df_ve_clean = df_valuation_error[df_valuation_error['Instrument'].isin(firms_keep)]
