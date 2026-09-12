@@ -12,6 +12,7 @@ interactively explore the data
 
 import duckdb
 from pathlib import Path
+import pandas as pd
 import os
 
 
@@ -30,11 +31,23 @@ with duckdb.connect(DB_PATH) as con:
     df_rd_capitalised = con.execute("SELECT * FROM rd_capitalised").df()
     df_riskfree = con.execute("SELECT * FROM riskfreerate").df()
     df_wacc_computed = con.execute("SELECT * FROM wacc_computed").df()
+    df_ve_clean = con.execute("SELECT * FROM valuation_errors").df()
 
 # ========================== Inspect in CSV =========================
 
-if __name__ == '__main__':
+def inspect_csv(df: pd.DataFrame, name: str='data.csv') -> None:
+    """
+    Download csv file
+    """
+    
     path_download = '/Users/sam/Downloads'
-    file_output = os.path.join(path_download, 'panel_clean_data.csv')
-    df_panel_clean.sort_values(['Instrument', 'quarter_date'], inplace=True)
-    df_panel_clean.to_csv(file_output)
+    file_output = os.path.join(path_download, name)
+    df.sort_values(['Instrument', 'quarter_date'], inplace=True)
+    df.to_csv(file_output)
+    
+
+if __name__ == '__main__':
+    
+    #inspect_csv(df_panel_clean, 'panel_clean_data.csv')
+    inspect_csv(df_ve_clean, 'valuation_error.csv')
+    

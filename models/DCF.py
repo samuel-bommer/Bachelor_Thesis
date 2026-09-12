@@ -1,5 +1,11 @@
 """"
-Full DCF 
+Full DCF
+
+VE = ln(MarketCap / IntrinsicValue)
+
+- VE = 0: market price equals your DCF intrinsic value exactly
+- VE > 0: market is overvalued relative to your model; market cap exceeds intrinsic value. 
+- VE < 0: market is undervalued; intrinsic value exceeds market cap. 
 """
 
 import pandas as pd
@@ -38,7 +44,7 @@ def load_panel() -> pd.DataFrame:
 # Using Damodaran figures
 TERMINAL_GROWTH = 0.025
 FORECAST_HORIZON = 10
-PHARMA_LTG_FALLBACK = 0.178
+PHARMA_LTG_FALLBACK = 0.06 #Long run Pharma revenue growth rate, find citation
 PHARMA_CAP = 0.4
 
 class DCF:
@@ -77,23 +83,23 @@ class DCF:
         """
         
         if pd.notna(self.ltg_mean) and self.ltg_mean > 0:
-            return min(self.ltg_mean, PHARMA_CAP)
+            return min(self.ltg_mean / 100, PHARMA_CAP)
         if pd.notna(self.rev_fy1) and pd.notna(self.rev_fy2) and self.rev_fy1 > 0:
             return (self.rev_fy2 - self.rev_fy1) / self.rev_fy1
         
         return PHARMA_LTG_FALLBACK
     
     
-    def fcff(self, ebit: float, revenue: float) -> float:
+    def fcff(self, ebit: float, revenue: float, capex_ratio: float, da_ratio: float) -> float:
         """
         Calculate free cash flow to firm, using average CapEx values
         to smoothen them
         """
         
-        nopat = ebit + (1 - self.marginal_tax)
-        da = revenue * self.da_ratio
-        capex = revenue * self.capex_ratio
-        fcff = nopat + da - capex - self.delta_nwc
+        nopat = ebit * (1 - self.marginal_tax)
+        da = revenue * da_ratio
+        capex = revenue * capex_ratio
+        fcff = nopat + da - capex - (revenue * self.delta_nwc)
         
         return fcff
     
@@ -118,10 +124,10 @@ class DCF:
         rev_t  = rev_fy3
         ebit_t = ebit3
         for t in range(4, years + 1):
-            fade   = (t - 3) / (years - 3)  
-            g_t    = self.ltg + fade * (TERMINAL_GROWTH - self.ltg)
-            rev_t  = rev_t  * (1 + g_t)
-            ebit_t = rev_t  * self.ebit_margin
+            fade = (t - 3) / (years - 3)  
+            g_t = self.ltg + fade * (TERMINAL_GROWTH - self.ltg)
+            rev_t = rev_t * (1 + g_t)
+            ebit_t = rev_t * self.ebit_margin
             flows.append(self.fcff(ebit_t, rev_t))
 
         return flows, ebit_t, rev_t
@@ -182,8 +188,17 @@ if __name__ == '__main__':
             'valuation_error': np.log(row['market_cap'] / intrinsic_value)
         })
         
-        df_valuation_error = pd.DataFrame(results)
+    df_valuation_error = pd.DataFrame(results)
         
-        firm_counts = df_valuation_error.groupby('Instrument')['quarter_date'].count()
-        firms_keep = firm_counts[firm_counts >= 6].index
-        df_ve_clean = df_valuation_error[df_valuation_error['Instrument'].isin(firms_keep)]
+    firm_counts = df_valuation_error.groupby('Instrument')['quarter_date'].count()
+    firms_keep = firm_counts[firm_counts >= 6].index
+    df_ve_clean = df_valuation_error[df_valuation_error['Instrument'].isin(firms_keep)]
+    
+    with duckdb.connect(DB_PATH) as con:
+        con.execute('DROP TABLE IF EXISTS valuation_errors')
+        con.register('df_ve_clean', df_ve_clean)
+        con.execute('CREATE TABLE valuation_errors AS SELECT * FROM df_ve_clean')
+    
+    print(f"Valuations computed: {len(df_ve_clean)} rows, {df_ve_clean['Instrument'].nunique()} firms")
+        
+        

@@ -52,9 +52,12 @@ def annual_lag(series: pd.Series) -> float:
 
 df_prc['nwc'] = df_prc['current_assets'] - df_prc['current_liabilities']
 df_prc['adj_ebit'] = df_prc['ebit_hist'] + df_prc['rd_expense'].fillna(0) - df_prc['rd_amortisation'].fillna(0)
+df_prc['capex_adj'] = df_prc['capex'] + df_prc['rd_expense'].fillna(0)
+df_prc['da_best'] = df_prc['da_cfs'].fillna(df_prc['da_act']).fillna(df_prc['da_is'])
+df_prc['da_adj'] = df_prc['da_best'] + df_prc['rd_amortisation'].fillna(0)
 
-df_prc['capex_rev'] = df_prc['capex'] / df_prc['revenue_hist']
-df_prc['da_rev'] = df_prc['da_cfs'] / df_prc['revenue_hist']
+df_prc['capex_rev'] = df_prc['capex_adj'] / df_prc['revenue_hist']
+df_prc['da_rev'] = df_prc['da_adj'] / df_prc['revenue_hist']
 df_prc['adj_ebit_margin'] = df_prc['adj_ebit'] / df_prc['revenue_hist']
 
 df_prc['smooth_capex_ratio'] = df_prc.groupby('Instrument', sort=False)['capex_rev'].transform(smooth_mean)
@@ -70,6 +73,9 @@ df_prc['net_reinvestment_ratio'] = (
     - df_prc['smooth_da_ratio']
     + df_prc['delta_nwc_rev']
 )
+
+df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].replace([np.inf, -np.inf], np.nan)
+df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].clip(-0.5, 0.6)
 
 # =========================== Save to DB =================================
 
