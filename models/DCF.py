@@ -33,6 +33,7 @@ def load_panel() -> pd.DataFrame:
                 pr.smooth_rd_ratio,
                 pr.smooth_rd_amort_ratio,
                 pr.delta_nwc_rev,
+                pr.smooth_delta_nwc_ratio,
                 pr.net_reinvestment_ratio
             FROM panel_clean p
             LEFT JOIN preprocessing pr
@@ -79,6 +80,7 @@ class DCF:
         self.rd_amort_ratio = row['smooth_rd_amort_ratio']
 
         self.delta_nwc = row['delta_nwc_rev']
+        # self.smooth_delta_nwc = row['smooth_delta_nwc_ratio']
     
 
     def _get_ltg(self) -> float:

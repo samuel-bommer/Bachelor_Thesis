@@ -37,7 +37,7 @@ def smooth_mean(series: pd.Series) -> float:
     Smoothing
     """
     
-    mean_series = series.rolling(12, min_periods=4).mean()
+    mean_series = series.rolling(12, min_periods=2).mean()
     return mean_series
 
 
@@ -72,11 +72,12 @@ df_prc['smooth_rd_amort_ratio'] = df_prc.groupby('Instrument', sort=False)['rd_a
 # Will most likely be changed later, quarters are populated with fully year numbers
 df_prc['nwc_lag4'] = df_prc.groupby('Instrument', sort=False)['nwc'].transform(annual_lag)
 df_prc['delta_nwc_rev'] = (df_prc['nwc'] - df_prc['nwc_lag4']) / df_prc['revenue_hist']
+df_prc['smooth_delta_nwc_ratio'] = df_prc.groupby('Instrument', sort=False)['delta_nwc_rev'].transform(smooth_mean)
 
 df_prc['net_reinvestment_ratio'] = (
     df_prc['smooth_capex_ratio']
     - df_prc['smooth_da_ratio']
-    + df_prc['delta_nwc_rev']
+    + df_prc['smooth_delta_nwc_ratio']
 )
 
 df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].replace([np.inf, -np.inf], np.nan)
@@ -100,6 +101,7 @@ with duckdb.connect(DB_PATH) as con:
             smooth_rd_ratio,
             smooth_rd_amort_ratio,
             delta_nwc_rev,
+            smooth_delta_nwc_ratio,
             net_reinvestment_ratio
         FROM df_prc
         """)
