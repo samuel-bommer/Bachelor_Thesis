@@ -34,7 +34,9 @@ df_prc.sort_values(['Instrument', 'quarter_date'], inplace=True)
 
 def smooth_mean(series: pd.Series) -> float:
     """
-    Smoothing
+    Smoothing: possibly adjust the min_periods, since values at the beginning
+    are currently being considered more. But on the other hand we would
+    lose data
     """
     
     mean_series = series.rolling(12, min_periods=2).mean()
@@ -72,6 +74,8 @@ df_prc['smooth_rd_amort_ratio'] = df_prc.groupby('Instrument', sort=False)['rd_a
 # Will most likely be changed later, quarters are populated with fully year numbers
 df_prc['nwc_lag4'] = df_prc.groupby('Instrument', sort=False)['nwc'].transform(annual_lag)
 df_prc['delta_nwc_rev'] = (df_prc['nwc'] - df_prc['nwc_lag4']) / df_prc['revenue_hist']
+
+# Think about this; since some firms get lost because of one time big nwc chagnes; however we get less firms with this in DCF
 df_prc['smooth_delta_nwc_ratio'] = df_prc.groupby('Instrument', sort=False)['delta_nwc_rev'].transform(smooth_mean)
 
 df_prc['net_reinvestment_ratio'] = (

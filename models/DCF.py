@@ -171,10 +171,10 @@ class DCF:
         firm_value = pv_cashflows + pv_terminal_value
         equity_value = firm_value - self.net_debt
         
-        if pd.isna(equity_value) or equity_value <= 0:
+        if pd.isna(firm_value) or firm_value <= 0:
             return None
         
-        return equity_value
+        return equity_value, firm_value
     
 # ================================ Running the DCF ===========================
 
@@ -187,17 +187,25 @@ if __name__ == '__main__':
     
     for _, row in df_filter.iterrows():
         dcf = DCF(row)
-        intrinsic_value = dcf.intrinsic_value_calc()
-        
-        if intrinsic_value is None:
+        result = dcf.intrinsic_value_calc()
+
+        if result is None:
             continue
+
+        intrinsic_value_equity, intrinsic_value_firm = result
+        net_debt = dcf.net_debt
+        
+        ve_equity = np.log(row['market_cap'] / intrinsic_value_equity) if intrinsic_value_equity > 0 else np.nan
+        ve_firm = np.log((row['market_cap'] + net_debt) / intrinsic_value_firm) if intrinsic_value_firm > 0 else np.nan
         
         results.append({
             'Instrument': row['Instrument'],
             'quarter_date': row['quarter_date'],
-            'intrinsic_value': intrinsic_value,
+            'intrinsic_value_equity': intrinsic_value_equity,
+            'intrinsic_value_firm': intrinsic_value_firm,
             'market_cap': row['market_cap'],
-            'valuation_error': np.log(row['market_cap'] / intrinsic_value)
+            'valuation_error_equity': ve_equity,
+            'valuation_error_firm':ve_firm
         })
         
     df_valuation_error = pd.DataFrame(results)

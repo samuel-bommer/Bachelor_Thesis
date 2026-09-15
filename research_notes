@@ -1,0 +1,26 @@
+# Research Notes
+
+## Methodology
+
+### Negative implied equity
+Should we really drop negative imlpied equity? Since these firms are traded on the market, our model predicts that these firms are highly overvalued. Which is an important step of our analysis
+
+### Data struggles
+Data struggles with fundamentals from LSEG. Another retrieve
+
+### Taking the difference
+To take the difference, the $\ln$ has the nice property of being symmetric and the dollar difference would not matter, there is a scale invariance. However, we lose some of the firms that have a negative implied value. This could introduce some bias for positive firms. The solution right now is to look at the difference using full implied EV and not only equity. With this, we can recover quite a few firms. And the ones that we cannot recover are most likely.
+
+
+## Literature
+
+### Notes on Papers
+
+
+## Next steps
+
+### Email to Deglmann
+Specify the current problems and send a link with the repository. Specifically go into the the count of firms; include a breakdown of the size of the firms and the density of the quarters and ask him if it is possible to only do the US.
+
+### Reading
+Start reading the econometrics book and make sure to save and understand the most importnat parts for the thesis. This is a task that can be accomplished quite easily during the WK.
