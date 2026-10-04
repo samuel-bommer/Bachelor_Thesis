@@ -246,5 +246,5 @@ if __name__ == '__main__':
     
 """
 Data quality note — fundamentals staleness:
-The panel spine includes both active and inactive US pharma equities (to avoid survivorship bias). For firms that delisted or lost LSEG coverage mid-sample, the most-recent-before join carries the last available annual fundamental forward indefinitely. A staleness check revealed 58 affected firms and 1,724 firm-quarters with fundamentals more than 12 months out of date. Only one of these firms survives into the final DCF regression sample, as the n_analysts ≥ 3 filter naturally excludes firms that have lost analyst coverage alongside their data coverage. The one remaining firm represents a minor limitation acknowledged here.
+The panel spine includes both active and inactive US pharma equities (to avoid survivorship bias). For firms that delisted or lost LSEG coverage mid-sample, the most-recent-before join carries the last available annual fundamental forward indefinitely. A staleness check revealed 58 affected firms and 1,724 firm-quarters with fundamentals more than 12 months out of date. Essentially none of these firms survives into the final DCF regression sample, as the n_analysts ≥ 3 filter naturally excludes firms that have lost analyst coverage alongside their data coverage. The one remaining firm represents a minor limitation acknowledged here.
 """

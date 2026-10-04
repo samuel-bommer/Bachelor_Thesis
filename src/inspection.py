@@ -52,5 +52,6 @@ if __name__ == '__main__':
     #inspect_csv(df_panel_clean, 'panel_clean_data.csv')
     #inspect_csv(df_ve_clean, 'valuation_error.csv')
     #inspect_csv(df_fundamentals, 'fundamentals.csv', sort=False)
-    inspect_csv(df_consensus, 'consensus.csv', sort=False)
+    #inspect_csv(df_consensus, 'consensus.csv', sort=False)
+    inspect_csv(df_ve_clean, 've_clean.csv', sort=False)
     

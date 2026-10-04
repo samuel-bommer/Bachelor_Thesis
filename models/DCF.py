@@ -69,17 +69,19 @@ class DCF:
         self.ltg_mean = row['ltg_mean']
         self.ltg = self._get_ltg()
         self.market_cap = row['market_cap']
-        self.net_debt = row['total_debt'] - row['cash']
+        total_debt = 0.0 if pd.isna(row['total_debt']) else row['total_debt']
+        cash = 0.0 if pd.isna(row['cash']) else row['cash']
+        self.net_debt = total_debt - cash
         self.n_analysts = row['n_analysts']
         self.wacc_computed = row['wacc_computed']
         self.marginal_tax = 0.35 if row['quarter_date'] < pd.Timestamp('2018-01-01') else 0.21
 
-        self.da_ratio = row['smooth_da_ratio']
-        self.capex_ratio = row['smooth_capex_ratio']
-        self.rd_ratio = row['smooth_rd_ratio']
-        self.rd_amort_ratio = row['smooth_rd_amort_ratio']
+        self.da_ratio = 0.0 if pd.isna(row['smooth_da_ratio']) else row['smooth_da_ratio']
+        self.capex_ratio = 0.0 if pd.isna(row['smooth_capex_ratio']) else row['smooth_capex_ratio']
+        self.rd_ratio = 0.0 if pd.isna(row['smooth_rd_ratio']) else row['smooth_rd_ratio']
+        self.rd_amort_ratio = 0.0 if pd.isna(row['smooth_rd_amort_ratio']) else row['smooth_rd_amort_ratio']
 
-        self.delta_nwc = row['delta_nwc_rev']
+        self.delta_nwc = 0.0 if pd.isna(row['delta_nwc_rev']) else row['delta_nwc_rev']
         # self.smooth_delta_nwc = row['smooth_delta_nwc_ratio']
     
 
@@ -127,7 +129,12 @@ class DCF:
         flows.append(self.fcff(adj_ebit_fy2, self.rev_fy2))
 
         rev_fy3  = self.rev_fy2 * (1 + self.ltg)
-        ebit3 = rev_fy3 * self.ebit_margin
+        if pd.notna(self.ebit_fy2) and pd.notna(self.rev_fy2) and self.rev_fy2 > 0:
+            margin = (self.ebit_fy2 + self.rev_fy2 * (self.rd_ratio - self.rd_amort_ratio)) / self.rev_fy2
+        else:
+            margin = self.ebit_margin
+        
+        ebit3 = rev_fy3 * margin
         flows.append(self.fcff(ebit3, rev_fy3))
 
         rev_t  = rev_fy3
@@ -136,7 +143,7 @@ class DCF:
             fade = (t - 3) / (years - 3)  
             g_t = self.ltg + fade * (TERMINAL_GROWTH - self.ltg)
             rev_t = rev_t * (1 + g_t)
-            ebit_t = rev_t * self.ebit_margin
+            ebit_t = rev_t * margin
             flows.append(self.fcff(ebit_t, rev_t))
 
         return flows, ebit_t, rev_t
@@ -195,8 +202,9 @@ if __name__ == '__main__':
         intrinsic_value_equity, intrinsic_value_firm = result
         net_debt = dcf.net_debt
         
+        ev_market = row['market_cap'] + net_debt
         ve_equity = np.log(row['market_cap'] / intrinsic_value_equity) if intrinsic_value_equity > 0 else np.nan
-        ve_firm = np.log((row['market_cap'] + net_debt) / intrinsic_value_firm) if intrinsic_value_firm > 0 else np.nan
+        ve_firm = np.log(ev_market / intrinsic_value_firm) if (intrinsic_value_firm > 0 and ev_market > 0) else np.nan
         
         results.append({
             'Instrument': row['Instrument'],
