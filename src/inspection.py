@@ -32,6 +32,7 @@ with duckdb.connect(DB_PATH) as con:
     df_riskfree = con.execute("SELECT * FROM riskfreerate").df()
     df_wacc_computed = con.execute("SELECT * FROM wacc_computed").df()
     df_ve_clean = con.execute("SELECT * FROM valuation_errors").df()
+    df_macro_indicators = con.execute("SELECT * FROM macro_indicators").df()
 
 # ========================== Inspect in CSV =========================
 
