@@ -1,6 +1,7 @@
 """
 Do the valuations make sense? Check DCF bias diagnostics.
-Reads directly from the valuation_errors table — no recomputation.
+Reads directly from the valuation_errors table and describes the distributions
+of important variables.
 """
 
 import duckdb
