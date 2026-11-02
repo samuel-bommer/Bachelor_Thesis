@@ -30,7 +30,7 @@ def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame) -> dict:
     
     x_const = sm.add_constant(x) # adds an intercept
     lin_reg = sm.OLS(y, x_const)
-    result = lin_reg.fit(cov_type='HC3') # cov type for heteroskedasticity-robust standard errors
+    result = lin_reg.fit(cov_type='HC3') # cov type for heteroskedasticity-robust standard errors (might change this later)
     
     print(result.summary())
     
@@ -41,6 +41,7 @@ if __name__ == '__main__':
     df_ve = df_ve_full[['Instrument', 'quarter_date', 'valuation_error_equity', 'valuation_error_firm']].copy()
     df_ve['quarter_date'] = pd.to_datetime(df_ve['quarter_date'])
     df_ve = df_ve.sort_values('quarter_date')
+    
     df_ve_quarterly_firm = df_ve.groupby('quarter_date')['valuation_error_firm'].mean().reset_index()
     df_ve_quarterly_equity = df_ve.groupby('quarter_date')['valuation_error_equity'].mean().reset_index()
     df_ve_quarterly = df_ve_quarterly_firm.merge(df_ve_quarterly_equity, on='quarter_date', how='outer')
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     df_analysis = df_macro_indicators.merge(df_ve_quarterly, on='quarter_date', how='inner')
     df_analysis = df_analysis.replace([np.inf, -np.inf], np.nan).dropna()
     
-    # =========================== Statsmodels Linear Regression ====================================
+    # =================== Statsmodels Linear Regression =====================
     
     vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'])
     real_gdp_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['real_gdp_growth'])

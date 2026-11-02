@@ -47,8 +47,8 @@ def load_panel() -> pd.DataFrame:
 # Using Damodaran figures
 TERMINAL_GROWTH = 0.025
 FORECAST_HORIZON = 10
-PHARMA_LTG_FALLBACK = 0.06 #Long run Pharma revenue growth rate, find citation
-PHARMA_CAP = 0.4
+PHARMA_LTG_FALLBACK = 0.06 # Long run Pharma revenue growth rate, find citation (damodaran)
+PHARMA_CAP = 0.11 # Need a realistic Pharma cap
 
 class DCF:
     
@@ -86,16 +86,13 @@ class DCF:
     
 
     def _get_ltg(self) -> float:
-        """
-        Helper function to get the long term growth
-        """
-        
         if pd.notna(self.ltg_mean) and self.ltg_mean > 0:
-            return min(self.ltg_mean / 100, PHARMA_CAP)
-        if pd.notna(self.rev_fy1) and pd.notna(self.rev_fy2) and self.rev_fy1 > 0:
-            return (self.rev_fy2 - self.rev_fy1) / self.rev_fy1
-        
-        return PHARMA_LTG_FALLBACK
+            ltg = self.ltg_mean / 100
+        elif pd.notna(self.rev_fy1) and pd.notna(self.rev_fy2) and self.rev_fy1 > 0:
+            ltg = (self.rev_fy2 - self.rev_fy1) / self.rev_fy1
+        else:
+            ltg = PHARMA_LTG_FALLBACK
+        return float(np.clip(ltg, 0.0, PHARMA_CAP))
     
     
     def fcff(self, ebit: float, revenue: float) -> float:
@@ -134,6 +131,7 @@ class DCF:
         else:
             margin = self.ebit_margin
         
+        margin = np.clip(margin, -0.5, 0.6) # add margin limits to reduce extreme outliers
         ebit3 = rev_fy3 * margin
         flows.append(self.fcff(ebit3, rev_fy3))
 
@@ -163,7 +161,7 @@ class DCF:
         Calculate intrinsic value
         """
         
-        if self.wacc_computed <= TERMINAL_GROWTH:
+        if pd.isna(self.wacc_computed) or self.wacc_computed <= TERMINAL_GROWTH:
             return None
         
         flows, _, _ = self.cash_flows()
@@ -177,13 +175,21 @@ class DCF:
         
         firm_value = pv_cashflows + pv_terminal_value
         equity_value = firm_value - self.net_debt
-        
+
         if pd.isna(firm_value) or firm_value <= 0:
             return None
-        
-        return equity_value, firm_value
+
+        return {
+            'equity_value':  equity_value,
+            'firm_value':    firm_value,
+            'pv_flows':      pv_cashflows,
+            'pv_tv':         float(pv_terminal_value),
+            'tv_share':      float(pv_terminal_value) / float(firm_value),
+            'ltg_used':      self.ltg,
+            'wacc_used':     self.wacc_computed,
+        }
     
-# ================================ Running the DCF ===========================
+# ================================ Running the DCF =============================
 
 if __name__ == '__main__':
     
@@ -199,13 +205,17 @@ if __name__ == '__main__':
         if result is None:
             continue
 
-        intrinsic_value_equity, intrinsic_value_firm = result
         net_debt = dcf.net_debt
-        
         ev_market = row['market_cap'] + net_debt
-        ve_equity = np.log(row['market_cap'] / intrinsic_value_equity) if intrinsic_value_equity > 0 else np.nan
-        ve_firm = np.log(ev_market / intrinsic_value_firm) if (intrinsic_value_firm > 0 and ev_market > 0) else np.nan
-        
+
+        intrinsic_value_equity = result['equity_value']
+        intrinsic_value_firm = result['firm_value']
+
+        ratio_equity = float(row['market_cap']) / float(intrinsic_value_equity) if (intrinsic_value_equity > 0 and row['market_cap'] > 0) else 0.0
+        ve_equity = np.log(ratio_equity) if ratio_equity > 0 else np.nan
+        ratio_firm = float(ev_market) / float(intrinsic_value_firm) if (intrinsic_value_firm > 0 and ev_market > 0) else 0.0
+        ve_firm = np.log(ratio_firm) if ratio_firm > 0 else np.nan
+
         results.append({
             'Instrument': row['Instrument'],
             'quarter_date': row['quarter_date'],
@@ -213,7 +223,12 @@ if __name__ == '__main__':
             'intrinsic_value_firm': intrinsic_value_firm,
             'market_cap': row['market_cap'],
             'valuation_error_equity': ve_equity,
-            'valuation_error_firm':ve_firm
+            'valuation_error_firm': ve_firm,
+            'pv_flows': result['pv_flows'],
+            'pv_tv': result['pv_tv'],
+            'tv_share': result['tv_share'],
+            'ltg_used': result['ltg_used'],
+            'wacc_used': result['wacc_used'],
         })
         
     df_valuation_error = pd.DataFrame(results)

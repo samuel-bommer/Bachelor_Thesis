@@ -85,7 +85,7 @@ df_prc['net_reinvestment_ratio'] = (
 )
 
 df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].replace([np.inf, -np.inf], np.nan)
-df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].clip(-0.5, 0.6)
+df_prc['adj_ebit_margin'] = df_prc['adj_ebit_margin'].clip(-0.5, 0.6) # apply limits on margins to reduce outliers
 
 # =========================== Save to DB =================================
 

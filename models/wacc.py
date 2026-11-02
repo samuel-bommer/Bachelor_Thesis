@@ -13,6 +13,7 @@ from pathlib import Path
 
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 
+
 with duckdb.connect(str(DB_PATH)) as con:
     df_wacc = con.execute("""
         SELECT
@@ -30,7 +31,7 @@ with duckdb.connect(str(DB_PATH)) as con:
 # ========================= Cost of Equity ==========================
 
 EQUITY_RISK_PREMIUM = 0.05
-PHARMA_SECTOR_BETA = 0.98
+PHARMA_SECTOR_BETA = 0.98 # Damodaran numbers
 
 def get_cost_equity(riskfree: pd.Series, beta: pd.Series ) -> pd.Series:
     """
@@ -48,7 +49,7 @@ def get_cost_equity(riskfree: pd.Series, beta: pd.Series ) -> pd.Series:
 
 # ========================== Cost of Debt ===========================
 
-COVERAGE_SPREADS = [ #interest coverage low, high, spread
+COVERAGE_SPREADS = [ # interest coverage low, high, spread
     (-100000, 0.1999,  0.1900),  # D2/D
     (0.20,    0.6499,  0.1600),  # C2/C
     (0.65,    0.7999,  0.1261),  # Ca2/CC
@@ -133,6 +134,10 @@ def get_wacc(quarter_date: pd.Series,
     equity_portion = cost_of_equity * (market_cap / firm_value).fillna(1 - PHARMA_DEBT_WEIGHT)
     debt_portion = cost_of_debt * (debt / firm_value).fillna(PHARMA_DEBT_WEIGHT) * (1-tax)
     wacc = equity_portion + debt_portion
+    
+    # apply a floor to bad data and outliers 
+    WACC_FLOOR = riskfree + 0.01
+    wacc = wacc.where(wacc >= WACC_FLOOR, np.nan)
     
     return wacc
 
