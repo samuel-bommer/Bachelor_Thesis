@@ -54,3 +54,7 @@ if __name__ == '__main__':
     run_adf(df_ve_quarterly_firm['valuation_error_firm'], 'VE Firm')
     run_adf(df_ve_quarterly_equity['valuation_error_equity'], 'VE Equity')
     run_adf(df_macro_indicators['vix'], 'vix')
+    run_adf(df_macro_indicators['real_gdp_growth'], 'real gdp growth')
+    run_adf(df_macro_indicators['credit_spread(10Y)'], 'credit spread')
+    run_adf(df_macro_indicators['cpi_yoy'], 'cpi yoy') # non-stationary (but kpss gives stationary as output)
+    # everything except for cpi_yoy is stationary; no need for differencing
