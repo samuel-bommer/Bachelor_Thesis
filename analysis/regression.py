@@ -7,12 +7,15 @@ Augmented Dicky Fuller test. For most of the statistical analysis
 we use statsmodels. 
 """
 
+import warnings
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import duckdb
 from pathlib import Path
 import statsmodels.api as sm
 import pandas as pd
+from BP_BG_diagnostics import run_bg_bp_diagnostics
 
 
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
@@ -23,17 +26,20 @@ with duckdb.connect(DB_PATH) as con:
     df_macro_indicators = con.execute("SELECT * FROM macro_indicators").df()
     
 
-def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame) -> dict:
+def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame, cov_type: str = 'HC3', max_lags: int = 4) -> sm.regression.linear_model.RegressionResultsWrapper:
     """
     Uses lin reg implementation for statsmodels
     """
     
     x_const = sm.add_constant(x) # adds an intercept
     lin_reg = sm.OLS(y, x_const)
-    result = lin_reg.fit(cov_type='HC3') # cov type for heteroskedasticity-robust standard errors (might change this later)
-    
+    if cov_type == 'HC3':
+        result = lin_reg.fit(cov_type=cov_type) # cov type for heteroskedasticity-robust standard errors (might change this later)
+    else:
+        cov_kwds = {'maxlags' : max_lags}
+        result = lin_reg.fit(cov_type=cov_type, cov_kwds=cov_kwds)
+
     print(result.summary())
-    
     return result
 
 
@@ -55,7 +61,13 @@ if __name__ == '__main__':
     
     # =================== Statsmodels Linear Regression =====================
     
-    vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'])
-    real_gdp_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['real_gdp_growth'])
+    vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'], 'HAC')
+    real_gdp_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['real_gdp_growth'], 'HAC')
+    # We use HAC because autocorrelation and heteroskedasticity are present, it ensures that p-values and confidence intervals are correct (does not change )
+    
+    # ========================== Run Diagnostics ============================
+    
+    run_bg_bp_diagnostics(vix_result, 'vix')
+    run_bg_bp_diagnostics(real_gdp_result, 'real gdp growth') 
     
     
