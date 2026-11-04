@@ -63,11 +63,15 @@ if __name__ == '__main__':
     
     vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'], 'HAC')
     real_gdp_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['real_gdp_growth'], 'HAC')
-    # We use HAC because autocorrelation and heteroskedasticity are present, it ensures that p-values and confidence intervals are correct (does not change )
-    
+    credit_spread_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['credit_spread(10Y)'], 'HAC')
+    cpi_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['cpi_yoy'], 'HAC')
+    # We use HAC because autocorrelation and heteroskedasticity are present, it ensures that p-values and confidence intervals are correct
+
     # ========================== Run Diagnostics ============================
-    
+
     run_bg_bp_diagnostics(vix_result, 'vix')
-    run_bg_bp_diagnostics(real_gdp_result, 'real gdp growth') 
+    run_bg_bp_diagnostics(real_gdp_result, 'real gdp growth')
+    run_bg_bp_diagnostics(credit_spread_result, 'credit spread')
+    run_bg_bp_diagnostics(cpi_result, 'cpi yoy')
     
     
