@@ -10,6 +10,9 @@ variables:
 - CPI YoY
 - Term spread (10Y - 2Y)
 - unemployment rate?
+
+It outputs 85 rows, going back to the last quarter of 2004. This is because we will 
+lose the first value due to differencing later (unit root present in some series)
 """
 
 import duckdb 
@@ -22,7 +25,7 @@ DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 
 if __name__ == '__main__':
     
-    start_date = '2005-01-01'
+    start_date = '2004-09-30' # We start early due to differencing later; not to lose out on the first row
     end_date = '2025-12-31'
     
     vix_df = web.DataReader('VIXCLS', 'fred', start=start_date, end=end_date)
@@ -37,10 +40,10 @@ if __name__ == '__main__':
     baa_df = baa_df.resample('QE').mean()
     baa_df.columns = ['credit_spread(10Y)']
     
-    cpi_start_date = '2004-01-01'
+    cpi_start_date = '2003-01-01' # start early due to YoY change
     cpi_df = web.DataReader('CPIAUCSL', 'fred', start=cpi_start_date, end=end_date)
     cpi_df = cpi_df.pct_change(12) * 100    # YoY % change on monthly series
-    cpi_df = cpi_df.resample('QE').last().dropna() # dropping 2004 values (NaN)
+    cpi_df = cpi_df.resample('QE').last().dropna() # dropping 2003 values (NaN)
     cpi_df.columns = ['cpi_yoy']
     
     ten_y_df = web.DataReader('DGS10', 'fred', start=start_date, end=end_date)

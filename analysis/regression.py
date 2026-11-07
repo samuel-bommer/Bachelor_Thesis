@@ -22,9 +22,8 @@ DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 
 
 with duckdb.connect(DB_PATH) as con:
-    df_ve_full = con.execute("SELECT * FROM valuation_errors").df()
-    df_macro_indicators = con.execute("SELECT * FROM macro_indicators").df()
-    
+    df_analysis = con.execute("SELECT * FROM analysis_table").df()
+
 
 def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame, cov_type: str = 'HC3', max_lags: int = 4) -> sm.regression.linear_model.RegressionResultsWrapper:
     """
@@ -44,21 +43,6 @@ def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame, cov_type: str = 'HC3',
 
 
 if __name__ == '__main__':
-    df_ve = df_ve_full[['Instrument', 'quarter_date', 'valuation_error_equity', 'valuation_error_firm']].copy()
-    df_ve['quarter_date'] = pd.to_datetime(df_ve['quarter_date'])
-    df_ve = df_ve.sort_values('quarter_date')
-    
-    df_ve_quarterly_firm = df_ve.groupby('quarter_date')['valuation_error_firm'].mean().reset_index()
-    df_ve_quarterly_equity = df_ve.groupby('quarter_date')['valuation_error_equity'].mean().reset_index()
-    df_ve_quarterly = df_ve_quarterly_firm.merge(df_ve_quarterly_equity, on='quarter_date', how='outer')
-    # Think about adding this to the db directly, since it will be reused a couple of times
-    # Check DCF again, why are all values negative (overstated)
-    
-    df_macro_indicators['quarter_date'] = pd.to_datetime(df_macro_indicators['quarter_date'])
-    
-    df_analysis = df_macro_indicators.merge(df_ve_quarterly, on='quarter_date', how='inner')
-    df_analysis = df_analysis.replace([np.inf, -np.inf], np.nan).dropna()
-    
     # =================== Statsmodels Linear Regression =====================
     
     vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'], 'HAC')
