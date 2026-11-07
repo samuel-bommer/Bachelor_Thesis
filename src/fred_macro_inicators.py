@@ -8,6 +8,8 @@ variables:
 - Real GDP Growth
 - Credit Spread (Baa-10Y)
 - CPI YoY
+- Term spread (10Y - 2Y)
+- unemployment rate?
 """
 
 import duckdb 
@@ -41,9 +43,27 @@ if __name__ == '__main__':
     cpi_df = cpi_df.resample('QE').last().dropna() # dropping 2004 values (NaN)
     cpi_df.columns = ['cpi_yoy']
     
-    df_macro = vix_df.join([real_gdp, baa_df, cpi_df], how='outer')
+    ten_y_df = web.DataReader('DGS10', 'fred', start=start_date, end=end_date)
+    two_y_df = web.DataReader('DGS2', 'fred', start=start_date, end=end_date)
+    term_spread_df = ten_y_df['DGS10'] - two_y_df['DGS2']
+    term_spread_df = term_spread_df.resample('QE').mean().to_frame('term_spread')
+    
+    industrial_prod_growth = web.DataReader('INDPRO', 'fred', start=cpi_start_date, end=end_date)
+    industrial_prod_growth = industrial_prod_growth.pct_change(12) * 100
+    industrial_prod_growth = industrial_prod_growth.resample('QE').last().dropna()
+    industrial_prod_growth.columns = ['ind_prod_growth']
+    
+    # ============================= Join them ===============================
+    
+    df_macro = vix_df.join([real_gdp, 
+                            baa_df, 
+                            cpi_df,
+                            term_spread_df,
+                            industrial_prod_growth
+                            ], how='inner')
     df_macro.index.name = 'quarter_date'
     df_macro = df_macro.reset_index()
+
     
     with duckdb.connect(str(DB_PATH)) as con:
         con.execute('DROP TABLE IF EXISTS macro_indicators')

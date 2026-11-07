@@ -57,4 +57,9 @@ if __name__ == '__main__':
     run_adf(df_macro_indicators['real_gdp_growth'], 'real gdp growth')
     run_adf(df_macro_indicators['credit_spread(10Y)'], 'credit spread')
     run_adf(df_macro_indicators['cpi_yoy'], 'cpi yoy') # non-stationary (but kpss gives stationary as output)
-    # everything except for cpi_yoy is stationary; no need for differencing
+    run_adf(df_macro_indicators['term_spread'], 'term spread') # non-stationary
+    run_adf(df_macro_indicators['ind_prod_growth'], 'industrial production growth')
+
+"""
+Differencing needs to be applied to term spread and CPI YoY (ADF test results in non stationary, while KPSS test returns stationary)
+"""
