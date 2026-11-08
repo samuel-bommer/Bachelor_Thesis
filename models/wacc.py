@@ -30,21 +30,33 @@ with duckdb.connect(str(DB_PATH)) as con:
 
 # ========================= Cost of Equity ==========================
 
-EQUITY_RISK_PREMIUM = 0.05
 PHARMA_SECTOR_BETA = 0.98 # Damodaran numbers
 
-def get_cost_equity(riskfree: pd.Series, beta: pd.Series ) -> pd.Series:
+# Damodaran implied ERP by year (FCFE-based, US market)
+# Source: https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histimpl.html
+ERP_BY_YEAR = {
+    2005: 0.0408, 2006: 0.0416, 2007: 0.0437, 2008: 0.0643,
+    2009: 0.0436, 2010: 0.0520, 2011: 0.0601, 2012: 0.0578,
+    2013: 0.0496, 2014: 0.0578, 2015: 0.0612, 2016: 0.0569,
+    2017: 0.0508, 2018: 0.0596, 2019: 0.0520, 2020: 0.0472,
+    2021: 0.0424, 2022: 0.0594, 2023: 0.0460, 2024: 0.0433,
+    2025: 0.0423,
+}
+
+def get_cost_equity(riskfree: pd.Series, beta: pd.Series, quarter_date: pd.Series) -> pd.Series:
     """
     The cost of equity: r_e = rf + beta * ERP
-    where the ERP is kept constant. 
-    
+    ERP is time-varying, sourced from Damodaran's annual implied ERP estimates.
+
     If no beta is in the list, we use the Pharma
     sector beta from Damodaran
     https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/Betas.html
     """
-    
+
     beta_filled = beta.fillna(PHARMA_SECTOR_BETA)
-    cost_of_equity = riskfree + beta_filled * EQUITY_RISK_PREMIUM
+    years = pd.to_datetime(quarter_date).dt.year
+    erp = years.map(ERP_BY_YEAR).fillna(0.05)
+    cost_of_equity = riskfree + beta_filled * erp
     return cost_of_equity
 
 # ========================== Cost of Debt ===========================
@@ -106,7 +118,8 @@ def get_cost_debt(ebit: pd.Series, interest: pd.Series, riskfree: pd.Series) -> 
 
 # ============================= WACC =============================
 
-PHARMA_DEBT_WEIGHT = 0.14
+# https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/dbtfund.htm
+PHARMA_DEBT_WEIGHT = 0.1224 # handling NA
 
 def get_wacc(quarter_date: pd.Series,
              riskfree: pd.Series, 
@@ -126,7 +139,7 @@ def get_wacc(quarter_date: pd.Series,
     """
     
     tax = pd.Series(np.where(quarter_date < '2018-01-01', 0.35, 0.21), index=ebit.index)
-    cost_of_equity = get_cost_equity(riskfree, beta)
+    cost_of_equity = get_cost_equity(riskfree, beta, quarter_date)
     cost_of_debt = get_cost_debt(ebit, interest, riskfree)
     
     firm_value = market_cap + debt

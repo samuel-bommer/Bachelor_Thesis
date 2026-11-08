@@ -19,7 +19,7 @@ DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
 
 def load_panel() -> pd.DataFrame:
     """
-    Laod the panel_clean with all the data
+    Load the panel_clean with all the data
     that we need.
     """
     
@@ -45,10 +45,10 @@ def load_panel() -> pd.DataFrame:
 
 # ============================ DCF calculation =========================
 # Using Damodaran figures
-TERMINAL_GROWTH = 0.025
+TERMINAL_GROWTH = 0.02
 FORECAST_HORIZON = 10
 PHARMA_LTG_FALLBACK = 0.06 # Long run Pharma revenue growth rate, find citation (damodaran)
-PHARMA_CAP = 0.11 # Need a realistic Pharma cap
+PHARMA_CAP = 0.11 # Need a realistic Pharma cap – Koller valuation book?
 
 class DCF:
     
@@ -68,6 +68,9 @@ class DCF:
         self.ebit_margin = row['adj_ebit_margin']
         self.ltg_mean = row['ltg_mean']
         self.ltg = self._get_ltg()
+        self.wacc_computed = row['wacc_computed']
+        if pd.notna(self.wacc_computed): # cap ltg relative to wacc
+            self.ltg = min(self.ltg, self.wacc_computed - 0.02) 
         self.market_cap = row['market_cap']
         total_debt = 0.0 if pd.isna(row['total_debt']) else row['total_debt']
         cash = 0.0 if pd.isna(row['cash']) else row['cash']

@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import duckdb
-from dateutil.relativedelta import relativedelta
 
 
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'

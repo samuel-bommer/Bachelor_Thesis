@@ -93,6 +93,9 @@ def build_data() -> pd.DataFrame:
                     f."Tax Rate - Mean"                            AS tax_rate_mean,
                     f."Dividends Paid - Cash - Total - Cash Flow"  AS dividends_paid,
                     f."Weighted Average Cost of Capital, (%)"      AS wacc_lseg,
+                    f."Loans & Receivables - Net - Short-Term"     AS receivables,
+                    f."Inventories - Total"                        AS inventories,
+                    f."Trade Accounts Payable & Accruals - Short-Term" AS accounts_payable,
 
                     ROW_NUMBER() OVER (
                         PARTITION BY s.Instrument, s.quarter_date
@@ -202,6 +205,9 @@ def build_data() -> pd.DataFrame:
                 ff.tax_rate_mean,
                 ff.dividends_paid,
                 ff.wacc_lseg,
+                ff.receivables,
+                ff.inventories,
+                ff.accounts_payable,
                 
                 --beta
                 b.beta,

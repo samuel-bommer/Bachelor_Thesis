@@ -13,21 +13,24 @@ DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
     
 with duckdb.connect(str(DB_PATH)) as con:
     df_prc = con.execute("""
-                              SELECT 
-                                    Instrument,
-                                    quarter_date,
-                                    revenue_hist,
-                                    capex,
-                                    da_cfs, da_act, da_is,
-                                    current_assets,
-                                    current_liabilities,
-                                    cash,
-                                    ebit_hist,
-                                    rd_expense,
-                                    rd_amortisation
-                                FROM 
-                                    panel_clean
-                              """).df()
+        SELECT 
+            Instrument,
+            quarter_date,
+            revenue_hist,
+            capex,
+            da_cfs, da_act, da_is,
+            receivables,
+            inventories,
+            accounts_payable,
+            current_assets,
+            current_liabilities,
+            cash,
+            ebit_hist,
+            rd_expense,
+            rd_amortisation
+        FROM 
+            panel_clean
+        """).df()
     
 df_prc.sort_values(['Instrument', 'quarter_date'], inplace=True)
 
@@ -52,7 +55,10 @@ def annual_lag(series: pd.Series) -> float:
 
 # =========================== Trailling Ratios ============================
 
-df_prc['nwc'] = df_prc['current_assets'] - df_prc['current_liabilities']
+nwc = df_prc['receivables'] + df_prc['inventories'] - df_prc['accounts_payable']
+nwc_fallback = df_prc['current_assets'] - df_prc['current_liabilities']
+df_prc['nwc'] = nwc.fillna(nwc_fallback)
+
 df_prc['adj_ebit'] = df_prc['ebit_hist'] + df_prc['rd_expense'].fillna(0) - df_prc['rd_amortisation'].fillna(0)
 df_prc['capex_adj'] = df_prc['capex'] + df_prc['rd_expense'].fillna(0)
 df_prc['da_best'] = df_prc['da_cfs'].fillna(df_prc['da_act']).fillna(df_prc['da_is'])
@@ -109,3 +115,5 @@ with duckdb.connect(DB_PATH) as con:
             net_reinvestment_ratio
         FROM df_prc
         """)
+    rows = con.execute('SELECT COUNT(*) FROM preprocessing').fetchone()[0]
+    print(f'Saved {rows} rows to preprocessing. Ready for the DCF')
