@@ -55,9 +55,13 @@ def get_cost_equity(riskfree: pd.Series, beta: pd.Series, quarter_date: pd.Serie
 
     beta_filled = beta.fillna(PHARMA_SECTOR_BETA)
     years = pd.to_datetime(quarter_date).dt.year
-    erp = years.map(ERP_BY_YEAR).fillna(0.05)
+    erp = years.map(ERP_BY_YEAR).fillna(0.051)
     cost_of_equity = riskfree + beta_filled * erp
+    coe_floor = riskfree + PHARMA_SECTOR_BETA * erp
+    cost_of_equity = cost_of_equity.clip(lower=coe_floor)
+    
     return cost_of_equity
+    # get citation for coe_floor
 
 # ========================== Cost of Debt ===========================
 
@@ -148,7 +152,7 @@ def get_wacc(quarter_date: pd.Series,
     debt_portion = cost_of_debt * (debt / firm_value).fillna(PHARMA_DEBT_WEIGHT) * (1-tax)
     wacc = equity_portion + debt_portion
     
-    # apply a floor to bad data and outliers 
+    # apply a floor to bad data and outliers
     WACC_FLOOR = riskfree + 0.01
     wacc = wacc.where(wacc >= WACC_FLOOR, np.nan)
     
