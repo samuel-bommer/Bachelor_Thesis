@@ -43,6 +43,7 @@ def lin_reg_statsmodels(y: pd.DataFrame, x: pd.DataFrame, cov_type: str = 'HC3',
 
 
 if __name__ == '__main__':
+    
     # =================== Statsmodels Linear Regression =====================
     
     vix_result = lin_reg_statsmodels(df_analysis['valuation_error_firm'], df_analysis['vix'], 'HAC')
@@ -62,5 +63,20 @@ if __name__ == '__main__':
     run_bg_bp_diagnostics(term_spread_result, 'term spread')
     run_bg_bp_diagnostics(ind_prod_result, 'ind prod growth')
     
+    # ================== Multivariate Linear Regression =====================
+    
+    macro_cols = ['vix', 'real_gdp_growth',
+                  'credit_spread(10Y)', 'cpi_yoy',
+                  'term_spread', 'ind_prod_growth']
+    
+    multivariate_result = lin_reg_statsmodels(
+        df_analysis['valuation_error_firm'],
+        df_analysis[macro_cols],
+        'HAC'
+    )
+    
+    # ==================== Multivariate Diagonostics ========================
+    
+    run_bg_bp_diagnostics(multivariate_result, 'multivariate')
     
     
