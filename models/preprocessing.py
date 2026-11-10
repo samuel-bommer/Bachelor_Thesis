@@ -60,7 +60,7 @@ nwc_fallback = df_prc['current_assets'] - df_prc['current_liabilities']
 df_prc['nwc'] = nwc.fillna(nwc_fallback)
 
 df_prc['adj_ebit'] = df_prc['ebit_hist'] + df_prc['rd_expense'].fillna(0) - df_prc['rd_amortisation'].fillna(0)
-df_prc['capex_adj'] = df_prc['capex'] + df_prc['rd_expense'].fillna(0)
+df_prc['capex_adj'] = df_prc['capex'].abs() + df_prc['rd_expense'].fillna(0) # important that capex is absolute
 df_prc['da_best'] = df_prc['da_cfs'].fillna(df_prc['da_act']).fillna(df_prc['da_is'])
 df_prc['da_adj'] = df_prc['da_best'] + df_prc['rd_amortisation'].fillna(0)
 

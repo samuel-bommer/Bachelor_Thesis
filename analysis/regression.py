@@ -63,20 +63,20 @@ if __name__ == '__main__':
     run_bg_bp_diagnostics(term_spread_result, 'term spread')
     run_bg_bp_diagnostics(ind_prod_result, 'ind prod growth')
     
-    # ================== Multivariate Linear Regression =====================
+    # ================== Multivariable Linear Regression =====================
     
     macro_cols = ['vix', 'real_gdp_growth',
                   'credit_spread(10Y)', 'cpi_yoy',
                   'term_spread', 'ind_prod_growth']
     
-    multivariate_result = lin_reg_statsmodels(
+    multivariable_result = lin_reg_statsmodels(
         df_analysis['valuation_error_firm'],
         df_analysis[macro_cols],
         'HAC'
     )
     
-    # ==================== Multivariate Diagonostics ========================
+    # ==================== Multivariable Diagnostics ========================
     
-    run_bg_bp_diagnostics(multivariate_result, 'multivariate')
+    run_bg_bp_diagnostics(multivariable_result, 'multivariate')
     
     

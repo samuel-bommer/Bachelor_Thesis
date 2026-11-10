@@ -85,7 +85,7 @@ class DCF:
         self.rd_amort_ratio = 0.0 if pd.isna(row['smooth_rd_amort_ratio']) else row['smooth_rd_amort_ratio']
 
         self.delta_nwc = 0.0 if pd.isna(row['delta_nwc_rev']) else row['delta_nwc_rev']
-        # self.smooth_delta_nwc = row['smooth_delta_nwc_ratio']
+        self.smooth_delta_nwc = 0.0 if pd.isna(row['smooth_delta_nwc_ratio']) else row['smooth_delta_nwc_ratio']
     
 
     def _get_ltg(self) -> float:
@@ -107,7 +107,7 @@ class DCF:
         nopat = ebit * (1 - self.marginal_tax)
         da = revenue * self.da_ratio
         capex = revenue * self.capex_ratio
-        fcff = nopat + da - capex - (revenue * self.delta_nwc)
+        fcff = nopat + da - capex - (revenue * self.smooth_delta_nwc)
         
         return fcff
     
