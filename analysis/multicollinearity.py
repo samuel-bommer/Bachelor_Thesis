@@ -3,6 +3,8 @@ This file is for testing multicollinearity in our model variables.
 
 For this a simple correlation matrix is used and later followed up
 by a Principal Component Analysis.
+
+VIF for each variable is just R² from regressing that variable on all the others, then VIF = 1 / (1 - R²)
 """
 
 import duckdb
@@ -11,7 +13,9 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
+import statsmodels.api as sm
 from statsmodels.multivariate.pca import PCA
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 DB_PATH = Path(__file__).parent.parent / 'data' / 'thesis.duckdb'
@@ -70,9 +74,34 @@ def principal_component_analysis(df: pd.DataFrame, graph: bool = True) -> pd.Dat
     return pca_model
 
 
+def var_infaltion_factor_analysis(df:pd.DataFrame) -> pd.DataFrame:
+    """
+    Run the VIF with statsmodels
+    """
+    
+    x_const = sm.add_constant(df)
+    vif_data = pd.DataFrame({
+        'Variable': df.columns,
+        'VIF': [variance_inflation_factor(x_const.values, i+1) for i in range(df.shape[1])]
+    })
+    
+    print(vif_data.sort_values('VIF', ascending=False).to_string(index=False))
+    return vif_data
+
+
 if __name__ == '__main__':
+    
+    # ====================== Correlation Matrix =====================
+    
     corr_matrix_analysis = correlation_matrix(df_analysis_exp)
+    
+    # ================= Principal Component Analysis ================
+    
     principal_components = principal_component_analysis(df_analysis_exp)
+    
+    # ============================= VIF =============================
+    
+    VIF_analysis = var_infaltion_factor_analysis(df_analysis_exp)
 
 
 """
@@ -81,4 +110,6 @@ highly correlated; except for VIX, credit spread, and industrial production.
 
 In the PCA, the first factor "only" explain about 40% of the data, which 
 means that our factors are largely orthogonal.
+
+All VIFs are below 5, so we have no mutlicollinearity problems.
 """
