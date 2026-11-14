@@ -46,27 +46,28 @@ def apply_granger_reverse(y: pd.Series, x: pd.DataFrame, maxlag: int = 4) -> dic
     return all_results
 
 
-def print_granger_results(results: dict) -> None:
+def print_granger_results(results: dict, reverse: bool = False) -> None:
     for col, res in results.items():
-        print(f'\n=== Granger: {col} → VE ===')
+        arrow = f'VE → {col}' if reverse else f'{col} → VE'
+        print(f'\n=== Granger: {arrow} ===')
         for lag, lag_res in res.items():
             f_stat = lag_res[0]['ssr_ftest'][0]
-            p_val  = lag_res[0]['ssr_ftest'][1]
-            sig    = '***' if p_val < 0.01 else '**' if p_val < 0.05 else '*' if p_val < 0.10 else ''
-            print(f'  Lag {lag}: F={f_stat:.3f}, p={p_val:.4f} {sig}')
+            p_val = lag_res[0]['ssr_ftest'][1]
+            sig = '***' if p_val < 0.01 else '**' if p_val < 0.05 else '*' if p_val < 0.10 else ''
+            print(f'Lag {lag}: F={f_stat:.3f}, p={p_val:.4f} {sig}')
 
 
 if __name__ == '__main__':
     df_granger = df_analysis.copy().drop(columns=['quarter_date', 'valuation_error_firm', 'valuation_error_equity'])
     df_explained = df_analysis['valuation_error_firm'].copy()
     
-    # ================================= Apply Granger ==================================
+    # ============================ Apply Granger =============================
     
     granger_results = apply_granger(df_explained, df_granger)
     print_granger_results(granger_results)
     
-    # ============================= Apply Reverse Granger ==============================
+    # ======================== Apply Reverse Granger =========================
     
     rev_granger_results = apply_granger_reverse(df_explained, df_granger)
-    print_granger_results(rev_granger_results)
+    print_granger_results(rev_granger_results, reverse=True)
     
